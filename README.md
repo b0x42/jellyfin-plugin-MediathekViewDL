@@ -159,6 +159,7 @@ Das Herzstück des Plugins. Hier definieren Sie, was regelmäßig gesucht wird.
 | **Originalsprache (ISO)** | Setzt einen ISO-Sprachcode (z.B. 'eng'), wenn der Inhalt als Originalversion erkannt wird. |
 | **Streaming (.strm) verwenden** | Speichert keine Videodatei, sondern nur eine Textdatei, die auf den Online-Stream verweist. |
 | **Vollständiges Video für sek. Audio** | Lädt das komplette Video, auch wenn es eine andere Sprache als Deutsch hat (sonst nur Audio-Extrakt). (Nicht bei .strm). |
+| **Nur Audio für deutsche Sprache** | Lädt für deutschsprachige Inhalte nur die Audiospur statt des vollständigen Videos. Gilt nicht für Gebärdensprache (immer Video) oder Audiodeskription (bereits immer Audio-only). (Nicht bei .strm). |
 | **Nicht-Episoden als Extras** | Behandelt Videos ohne Episodennummer als Bonusmaterial. |
 | ↳ **Trailer speichern** | Speichert Trailer. |
 | ↳ **Interviews speichern** | Speichert Interviews. |

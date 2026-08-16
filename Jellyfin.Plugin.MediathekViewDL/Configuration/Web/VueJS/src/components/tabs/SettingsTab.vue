@@ -45,6 +45,7 @@ const defMaxDuration = ref('')
 // Subscription Defaults - Download
 const defUseStreamingUrlFiles = ref(false)
 const defDownloadFullVideoSecondaryAudio = ref(false)
+const defDownloadAudioOnlyForPrimaryLanguage = ref(false)
 const defAlwaysCreateSubfolder = ref(false)
 const defEnhancedDuplicateDetection = ref(false)
 const defAllowFallbackToLowerQuality = ref(true)
@@ -133,6 +134,7 @@ async function loadConfig() {
 
     defUseStreamingUrlFiles.value = defDl.UseStreamingUrlFiles ?? false
     defDownloadFullVideoSecondaryAudio.value = defDl.DownloadFullVideoForSecondaryAudio ?? false
+    defDownloadAudioOnlyForPrimaryLanguage.value = defDl.DownloadAudioOnlyForPrimaryLanguage ?? false
     defAlwaysCreateSubfolder.value = defDl.AlwaysCreateSubfolder ?? false
     defEnhancedDuplicateDetection.value = defDl.EnhancedDuplicateDetection ?? false
     defAllowFallbackToLowerQuality.value = defDl.AllowFallbackToLowerQuality !== undefined ? defDl.AllowFallbackToLowerQuality : true
@@ -211,6 +213,7 @@ async function saveConfig() {
       DownloadSettings: {
         UseStreamingUrlFiles: defUseStreamingUrlFiles.value,
         DownloadFullVideoForSecondaryAudio: defDownloadFullVideoSecondaryAudio.value,
+        DownloadAudioOnlyForPrimaryLanguage: defDownloadAudioOnlyForPrimaryLanguage.value,
         AlwaysCreateSubfolder: defAlwaysCreateSubfolder.value,
         EnhancedDuplicateDetection: defEnhancedDuplicateDetection.value,
         AllowFallbackToLowerQuality: defAllowFallbackToLowerQuality.value,
@@ -494,6 +497,9 @@ onMounted(() => {
           <div v-if="!defUseStreamingUrlFiles" class="sub-options">
             <div class="checkbox-field">
               <label><input v-model="defDownloadFullVideoSecondaryAudio" type="checkbox"> Vollständiges Video für sekundäre Audiosprachen</label>
+            </div>
+            <div class="checkbox-field">
+              <label><input v-model="defDownloadAudioOnlyForPrimaryLanguage" type="checkbox"> Nur Audio für deutsche Sprache</label>
             </div>
           </div>
           <div class="checkbox-field">

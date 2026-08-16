@@ -249,6 +249,12 @@ function updateDate(target, field, value) {
                             </label>
                             <p class="field-desc">Wenn aktiviert, wird das vollständige Video heruntergeladen, auch wenn es eine andere Audiosprache als Deutsch enthält. Andernfalls wird nur die Audiospur dieser Sprache extrahiert.</p>
                         </div>
+                        <div class="checkbox-field">
+                            <label>
+                                <input v-model="editedSub.Download.DownloadAudioOnlyForPrimaryLanguage" type="checkbox"> Nur Audio für deutsche Sprache herunterladen
+                            </label>
+                            <p class="field-desc">Wenn aktiviert, wird für deutschsprachige Inhalte nur die Audiospur heruntergeladen statt des vollständigen Videos. Gilt nicht für Inhalte mit Gebärdensprache (immer Video) oder Audiodeskription (bereits immer Audio-only).</p>
+                        </div>
                     </div>
                     <div class="checkbox-field">
                         <label>
