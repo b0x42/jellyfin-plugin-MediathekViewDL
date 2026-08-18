@@ -1,10 +1,10 @@
 ## 1. Configuration
 
-- [ ] 1.1 Add `AudioContainerFormat` enum (`Mka`, `M4a`) to the `Configuration` (or appropriate shared) namespace, with an XML summary comment on the enum and on each value (per project convention of XML summary comments on public members).
-- [ ] 1.2 Add `AudioContainerFormat` property (default `M4a`) to `BaseDownloadSettings`, with an XML summary comment documenting the default and its rationale (podcast/external-player compatibility).
-- [ ] 1.3 Verify the property is available on `DownloadSettings` (per-subscription) via inheritance from `BaseDownloadSettings`, and defaults to `M4a` for a newly constructed `Subscription`.
+- [x] 1.1 Add `AudioContainerFormat` enum (`Mka`, `M4a`) to the `Configuration` (or appropriate shared) namespace, with an XML summary comment on the enum and on each value (per project convention of XML summary comments on public members).
+- [x] 1.2 Add `AudioContainerFormat` property (default `M4a`) to `BaseDownloadSettings`, with an XML summary comment documenting the default and its rationale (podcast/external-player compatibility).
+- [x] 1.3 Verify the property is available on `DownloadSettings` (per-subscription) via inheritance from `BaseDownloadSettings`, and defaults to `M4a` for a newly constructed `Subscription`.
 - [ ] 1.4 Optionally wire `AudioContainerFormat` into `SubscriptionDefaults.DownloadSettings` purely as a Vue.js form pre-fill value (see task 6.1/6.3) - this has no runtime effect on the download pipeline; do not add server-side resolution logic that reads `SubscriptionDefaults` at download time, since no such mechanism exists for any other setting today.
-- [ ] 1.5 Confirm the new enum property round-trips correctly through the plugin's configuration persistence - verify a `Subscription`/`PluginConfiguration` saved before this change (with no `AudioContainerFormat` property present) deserializes with the property defaulting to `M4a` rather than to the enum's implicit zero value, which would silently produce the opposite of the intended default if `Mka` were declared first in the enum.
+- [ ] 1.5 Confirm the new enum property round-trips correctly through the plugin's `configuration.xml` persistence (`IXmlSerializer`/.NET `XmlSerializer`) - verify a `Subscription`/`PluginConfiguration` XML fixture saved before this change (with no `<AudioContainerFormat>` element present) deserializes with the property defaulting to `M4a` via the record's property initializer.
 
 ## 2. FFmpeg Service
 
@@ -46,10 +46,16 @@
 - [ ] 7.3 Add `AudioExtractionHandler` tests verifying the subscription's format value drives both the temp file extension and the arguments passed to `IFFmpegService`, covering both the `M4a` default and an explicit `Mka` value.
 - [ ] 7.4 Add a `LocalMediaScanner` test confirming `.m4a` files are recognized.
 - [ ] 7.5 Search the test suite for any other hardcoded `.mka` default-path expectations and update them consistently.
-- [ ] 7.6 Add a config serialization/deserialization test confirming a `PluginConfiguration` without an explicit `AudioContainerFormat` value deserializes to `M4a` (covers task 1.5).
+- [ ] 7.6 Add a config serialization/deserialization test confirming a `PluginConfiguration`/`Subscription` XML fixture without an `<AudioContainerFormat>` element deserializes to `M4a` (covers task 1.5).
 - [ ] 7.7 Run `dotnet test Jellyfin.Plugin.MediathekViewDL.sln` and confirm all tests pass.
 
-## 8. Build & Docs
+## 8. Build
 
 - [ ] 8.1 Run `dotnet build Jellyfin.Plugin.MediathekViewDL.sln` and confirm it succeeds with `TreatWarningsAsErrors=true`.
-- [ ] 8.2 Update `README.md` to document the new audio container format setting, explicitly noting the default is now `.m4a` (changed from the previous hardcoded `.mka`) and how to restore `.mka` as default.
+
+## 9. Documentation
+
+- [ ] 9.1 Update `README.md` (German) to document the new `AudioContainerFormat` setting under the subscription/download settings section, alongside the existing `.strm` and metadata-embedding documentation: explain both `.m4a` and `.mka` options, state that `.m4a` is the default (changed from the previous hardcoded `.mka`), and explain how to set `.mka` per subscription to restore prior behavior.
+- [ ] 9.2 Update the README's Table of Contents / feature table entries if the new setting warrants a mention there (matching how `.strm` support is already called out in the feature table).
+- [ ] 9.3 Cross-check that the Vue.js helper text added in task 6.4 and the README wording are consistent (same tradeoff explanation - Matroska vs. MP4/podcast compatibility - so users see the same guidance in both places).
+- [ ] 9.4 Update XML summary doc comments on any modified public API surface not already covered by tasks 1.1/1.2/2.2 (e.g. `AudioExtractionHandler`, `FileNameBuilderService` if their public doc comments describe the old hardcoded `.mka` behavior).
