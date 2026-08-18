@@ -1,8 +1,32 @@
 ## Purpose
 
-Defines the behavior of audio-only content exports (secondary-language audio extraction without video), including the selectable output container format, codec handling, and embedded metadata, so that extracted audio files are correctly playable and identifiable both inside Jellyfin and in external audio/podcast players.
+Defines the behavior of audio-only content downloads, including how audio-only mode is triggered (secondary-language content, an opt-in for German/primary-language content, or audiodescription content), the selectable output container format, codec handling, and embedded metadata, so that extracted audio files are correctly playable and identifiable both inside Jellyfin and in external audio/podcast players.
 
 ## ADDED Requirements
+
+### Requirement: Opt-In Audio-Only Downloads for Primary-Language Content
+
+The system SHALL support a per-subscription setting, `DownloadAudioOnlyForPrimaryLanguage`, that when enabled routes German (primary-language) content through audio-only extraction instead of downloading the full video. This setting SHALL default to disabled (full video) to preserve existing behavior for subscriptions that do not opt in. Sign-language content SHALL always download as full video regardless of this setting. Audiodescription content SHALL always download as audio-only regardless of this setting (unrelated existing behavior).
+
+#### Scenario: German content downloads as audio-only when the setting is enabled
+
+- **WHEN** a subscription has `DownloadAudioOnlyForPrimaryLanguage` enabled and an eligible item is in German with no sign language
+- **THEN** the system downloads only the audio track for that item, using the subscription's configured audio container format
+
+#### Scenario: German content downloads as full video when the setting is disabled
+
+- **WHEN** a subscription does not enable `DownloadAudioOnlyForPrimaryLanguage` (the default) and an eligible item is in German
+- **THEN** the system downloads the full video for that item, matching prior behavior
+
+#### Scenario: Sign-language content always downloads as full video
+
+- **WHEN** an eligible item has sign language, regardless of the `DownloadAudioOnlyForPrimaryLanguage` setting
+- **THEN** the system downloads the full video for that item
+
+#### Scenario: Audiodescription content is unaffected by the new setting
+
+- **WHEN** an eligible item has audiodescription, regardless of the `DownloadAudioOnlyForPrimaryLanguage` setting
+- **THEN** the system downloads only the audio track, consistent with existing behavior for audiodescription content
 
 ### Requirement: Configurable Audio Container Format
 
@@ -17,6 +41,11 @@ The system SHALL support two audio-only output container formats: Matroska Audio
 
 - **WHEN** a subscription's audio container format is explicitly set to `.mka`
 - **THEN** the system extracts audio-only downloads for that subscription as `.mka` files, independent of any other subscription's setting
+
+#### Scenario: Container format applies uniformly regardless of trigger
+
+- **WHEN** audio-only extraction occurs for a given subscription, whether triggered by secondary-language content, by the `DownloadAudioOnlyForPrimaryLanguage` opt-in for German content, or by audiodescription content
+- **THEN** the resulting file uses that subscription's configured `AudioContainerFormat` in every case
 
 ### Requirement: Lossless Codec Passthrough
 

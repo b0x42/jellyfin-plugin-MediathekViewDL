@@ -37,7 +37,7 @@
 - [x] 6.2 Add the same selector to `SubscriptionEditor.vue` for the actual per-subscription `Download.AudioContainerFormat` value - this is the field that has real runtime effect.
 - [x] 6.3 Wire the new field into `SubscriptionFactory.createDefault()`'s pre-fill logic (the actual mechanism that applies `SubscriptionDefaults.DownloadSettings` when a new subscription is created via `PluginConfig.vue`'s `openEditor(null)`), mirroring how `DownloadFullVideoForSecondaryAudio` is already defaulted there.
 - [x] 6.4 Add descriptive helper text near the control explaining the tradeoff (Matroska vs. MP4/podcast compatibility), matching the style of existing `field-desc` text.
-- [ ] 6.5 Run `npm run build` in the VueJS directory to confirm the frontend still builds.
+- [x] 6.5 Run `npm run build` in the VueJS directory to confirm the frontend still builds.
 
 ## 7. Tests
 
@@ -59,3 +59,14 @@
 - [x] 9.2 Update the README's Table of Contents / feature table entries if the new setting warrants a mention there (matching how `.strm` support is already called out in the feature table).
 - [x] 9.3 Cross-check that the Vue.js helper text added in task 6.4 and the README wording are consistent (same tradeoff explanation - Matroska vs. MP4/podcast compatibility - so users see the same guidance in both places).
 - [x] 9.4 Update XML summary doc comments on any modified public API surface not already covered by tasks 1.1/1.2/2.2 (e.g. `AudioExtractionHandler`, `FileNameBuilderService` if their public doc comments describe the old hardcoded `.mka` behavior).
+
+## 10. Merged: Opt-In Audio-Only Downloads for Primary-Language Content
+
+The `DownloadAudioOnlyForPrimaryLanguage` setting (developed independently on `feat/audio-only-german-subscription`) was merged into this branch and reconciled with the `AudioContainerFormat` work above (see design.md Decisions 8-9).
+
+- [x] 10.1 Merge `feat/audio-only-german-subscription` into this branch; resolve conflicts in `SubscriptionEditor.vue`, `SettingsTab.vue`, `SubscriptionFactory.js`, and `README.md` by keeping both features' additions side by side (non-conflicting content).
+- [x] 10.2 Confirm `FileNameBuilderService.GetTargetMainType`'s merged condition composes correctly: German content only forces `FileType.Video` when `DownloadAudioOnlyForPrimaryLanguage` is unset; sign-language always forces `FileType.Video`; audiodescription is unaffected and still resolves to `FileType.Audio`.
+- [x] 10.3 Update the merged branch's own tests (`GenerateDownloadPaths_ShouldReturnMka_WhenGerman_AndAudioOnlyForPrimaryLanguageEnabled`, `GenerateDownloadPaths_ShouldReturnMka_WhenGerman_WithAudiodescription_RegardlessOfFlag`) to expect `.m4a` under the new default `AudioContainerFormat`, and add an explicit `Mka`-override variant so the original `.mka` assertion is still covered.
+- [x] 10.4 Restructure `SubscriptionEditor.vue`'s Download tab so the single shared `AudioContainerFormat` selector appears once per `.strm` branch, after both `DownloadFullVideoForSecondaryAudio` and `DownloadAudioOnlyForPrimaryLanguage`, with helper text naming all three trigger conditions (secondary language, German opt-in, audiodescription) - no per-trigger format chooser.
+- [x] 10.5 Run `dotnet build`, `dotnet test`, `npm run build`, and `npx vitest --run` after the merge to confirm the composed behavior is correct end-to-end (201 backend tests, 50 frontend tests passing).
+- [x] 10.6 Update `openspec/changes/switch-audio-export-to-m4a/specs/audio-extraction/spec.md` scenarios and `proposal.md`/`design.md` prose (done in this pass) to describe both capabilities as one coherent change; verify with `openspec validate --strict`.
