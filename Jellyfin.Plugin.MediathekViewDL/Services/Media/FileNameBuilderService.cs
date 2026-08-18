@@ -295,7 +295,9 @@ public class FileNameBuilderService : IFileNameBuilderService
         }
 
         // Audiodesc. should alwas be Audioonly, SignLang must be Video because else its nonsense
-        if ((videoInfo is { Language: "deu", HasAudiodescription: false } or { HasSignLanguage: true }) || subscription.Download.DownloadFullVideoForSecondaryAudio)
+        if ((videoInfo is { Language: "deu", HasAudiodescription: false } && !subscription.Download.DownloadAudioOnlyForPrimaryLanguage)
+            || videoInfo.HasSignLanguage
+            || subscription.Download.DownloadFullVideoForSecondaryAudio)
         {
             // .mkv output already embeds metadata via its own -f matroska muxing; AudioContainerFormat does not apply here.
             return FileType.Video;

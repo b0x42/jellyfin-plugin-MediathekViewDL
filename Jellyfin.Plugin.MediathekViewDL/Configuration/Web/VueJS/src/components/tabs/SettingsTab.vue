@@ -46,6 +46,7 @@ const defMaxDuration = ref('')
 const defUseStreamingUrlFiles = ref(false)
 const defDownloadFullVideoSecondaryAudio = ref(false)
 const defAudioContainerFormat = ref('M4a')
+const defDownloadAudioOnlyForPrimaryLanguage = ref(false)
 const defAlwaysCreateSubfolder = ref(false)
 const defEnhancedDuplicateDetection = ref(false)
 const defAllowFallbackToLowerQuality = ref(true)
@@ -135,6 +136,7 @@ async function loadConfig() {
     defUseStreamingUrlFiles.value = defDl.UseStreamingUrlFiles ?? false
     defDownloadFullVideoSecondaryAudio.value = defDl.DownloadFullVideoForSecondaryAudio ?? false
     defAudioContainerFormat.value = defDl.AudioContainerFormat ?? 'M4a'
+    defDownloadAudioOnlyForPrimaryLanguage.value = defDl.DownloadAudioOnlyForPrimaryLanguage ?? false
     defAlwaysCreateSubfolder.value = defDl.AlwaysCreateSubfolder ?? false
     defEnhancedDuplicateDetection.value = defDl.EnhancedDuplicateDetection ?? false
     defAllowFallbackToLowerQuality.value = defDl.AllowFallbackToLowerQuality !== undefined ? defDl.AllowFallbackToLowerQuality : true
@@ -214,6 +216,7 @@ async function saveConfig() {
         UseStreamingUrlFiles: defUseStreamingUrlFiles.value,
         DownloadFullVideoForSecondaryAudio: defDownloadFullVideoSecondaryAudio.value,
         AudioContainerFormat: defAudioContainerFormat.value,
+        DownloadAudioOnlyForPrimaryLanguage: defDownloadAudioOnlyForPrimaryLanguage.value,
         AlwaysCreateSubfolder: defAlwaysCreateSubfolder.value,
         EnhancedDuplicateDetection: defEnhancedDuplicateDetection.value,
         AllowFallbackToLowerQuality: defAllowFallbackToLowerQuality.value,
@@ -497,6 +500,9 @@ onMounted(() => {
           <div v-if="!defUseStreamingUrlFiles" class="sub-options">
             <div class="checkbox-field">
               <label><input v-model="defDownloadFullVideoSecondaryAudio" type="checkbox"> Vollständiges Video für sekundäre Audiosprachen</label>
+            </div>
+            <div class="checkbox-field">
+              <label><input v-model="defDownloadAudioOnlyForPrimaryLanguage" type="checkbox"> Nur Audio für deutsche Sprache</label>
             </div>
           </div>
           <div class="field">

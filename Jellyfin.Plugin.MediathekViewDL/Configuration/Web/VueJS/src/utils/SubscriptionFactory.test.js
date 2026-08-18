@@ -40,7 +40,8 @@ describe('SubscriptionFactory', () => {
                     AllowFallbackToLowerQuality: false,
                     EnhancedDuplicateDetection: true,
                     QualityCheckWithUrl: true,
-                    DownloadFullVideoForSecondaryAudio: true
+                    DownloadFullVideoForSecondaryAudio: true,
+                    DownloadAudioOnlyForPrimaryLanguage: true
                 }
             }
             // Act
@@ -52,6 +53,14 @@ describe('SubscriptionFactory', () => {
             expect(subscription.Download.EnhancedDuplicateDetection).toBe(true)
             expect(subscription.Download.QualityCheckWithUrl).toBe(true)
             expect(subscription.Download.DownloadFullVideoForSecondaryAudio).toBe(true)
+            expect(subscription.Download.DownloadAudioOnlyForPrimaryLanguage).toBe(true)
+        })
+
+        it('ShouldDefaultDownloadAudioOnlyForPrimaryLanguageToFalse_WhenNotProvided', () => {
+            // Arrange / Act
+            const subscription = SubscriptionFactory.createDefault({})
+            // Assert
+            expect(subscription.Download.DownloadAudioOnlyForPrimaryLanguage).toBe(false)
         })
 
         it('ShouldDefaultAllowFallbackToLowerQualityToTrue_WhenNotProvided', () => {

@@ -17,7 +17,8 @@ export const SubscriptionFactory = {
       EnhancedDuplicateDetection: defaults.DownloadSettings?.EnhancedDuplicateDetection || false,
       QualityCheckWithUrl: defaults.DownloadSettings?.QualityCheckWithUrl || false,
       DownloadFullVideoForSecondaryAudio: defaults.DownloadSettings?.DownloadFullVideoForSecondaryAudio || false,
-      AudioContainerFormat: defaults.DownloadSettings?.AudioContainerFormat || 'M4a'
+      AudioContainerFormat: defaults.DownloadSettings?.AudioContainerFormat || 'M4a',
+      DownloadAudioOnlyForPrimaryLanguage: defaults.DownloadSettings?.DownloadAudioOnlyForPrimaryLanguage || false
     },
     Series: {
       EnforceSeriesParsing: defaults.SeriesSettings?.EnforceSeriesParsing || false,

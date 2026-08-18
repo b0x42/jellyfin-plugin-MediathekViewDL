@@ -17,6 +17,13 @@ public record BaseDownloadSettings
     public bool DownloadFullVideoForSecondaryAudio { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether to download only the audio track for German (primary-language)
+    /// content instead of the full video. Has no effect on audiodescription content, which is already
+    /// audio-only, or sign-language content, which always downloads as full video.
+    /// </summary>
+    public bool DownloadAudioOnlyForPrimaryLanguage { get; init; }
+
+    /// <summary>
     /// Gets a value indicating whether to allow falling back to lower quality versions
     /// if HD version is not available.
     /// </summary>

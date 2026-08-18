@@ -160,6 +160,7 @@ Das Herzstück des Plugins. Hier definieren Sie, was regelmäßig gesucht wird.
 | **Streaming (.strm) verwenden** | Speichert keine Videodatei, sondern nur eine Textdatei, die auf den Online-Stream verweist. |
 | **Vollständiges Video für sek. Audio** | Lädt das komplette Video, auch wenn es eine andere Sprache als Deutsch hat (sonst nur Audio-Extrakt). (Nicht bei .strm). |
 | **Container-Format für reine Audio-Downloads** | Legt fest, ob reine Audio-Extrakte (z.B. sekundäre Audiosprache ohne vollständiges Video, oder Audiodeskription) als `.m4a` (Standard, empfohlen für Podcast-/Audio-Apps) oder `.mka` (Matroska, primär für Jellyfin selbst) gespeichert werden. Die Audiospur wird in beiden Fällen ohne erneutes Kodieren übernommen (kein Qualitätsverlust). Eine Änderung wirkt sich nur auf neue Downloads aus, bereits heruntergeladene Dateien werden nicht konvertiert. |
+| **Nur Audio für deutsche Sprache** | Lädt für deutschsprachige Inhalte nur die Audiospur statt des vollständigen Videos. Gilt nicht für Gebärdensprache (immer Video) oder Audiodeskription (bereits immer Audio-only). (Nicht bei .strm). |
 | **Nicht-Episoden als Extras** | Behandelt Videos ohne Episodennummer als Bonusmaterial. |
 | ↳ **Trailer speichern** | Speichert Trailer. |
 | ↳ **Interviews speichern** | Speichert Interviews. |
