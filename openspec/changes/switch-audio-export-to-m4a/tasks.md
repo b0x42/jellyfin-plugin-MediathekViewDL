@@ -33,10 +33,10 @@
 
 ## 6. Vue.js Configuration UI
 
-- [ ] 6.1 Add a format selector (e.g. `<select>` with `Mka`/`M4a` options) to `SettingsTab.vue` for `SubscriptionDefaults.DownloadSettings.AudioContainerFormat` - this only pre-fills new-subscription forms client-side (per Decision 1/task 1.4), consistent with how `UseStreamingUrlFiles` behaves there today.
-- [ ] 6.2 Add the same selector to `SubscriptionEditor.vue` for the actual per-subscription `Download.AudioContainerFormat` value - this is the field that has real runtime effect.
-- [ ] 6.3 Wire the new field into `PluginConfig.vue`'s defaults-apply/pre-fill logic (mirroring how `UseStreamingUrlFiles` is copied into `cfg.SubscriptionDefaults.DownloadSettings` and applied when initializing a new subscription's form state).
-- [ ] 6.4 Add descriptive helper text near the control explaining the tradeoff (Matroska vs. MP4/podcast compatibility), matching the style of existing `field-desc` text.
+- [x] 6.1 Add a format selector (e.g. `<select>` with `Mka`/`M4a` options) to `SettingsTab.vue` for `SubscriptionDefaults.DownloadSettings.AudioContainerFormat` - this only pre-fills new-subscription forms client-side (per Decision 1/task 1.4), consistent with how `UseStreamingUrlFiles` behaves there today.
+- [x] 6.2 Add the same selector to `SubscriptionEditor.vue` for the actual per-subscription `Download.AudioContainerFormat` value - this is the field that has real runtime effect.
+- [x] 6.3 Wire the new field into `SubscriptionFactory.createDefault()`'s pre-fill logic (the actual mechanism that applies `SubscriptionDefaults.DownloadSettings` when a new subscription is created via `PluginConfig.vue`'s `openEditor(null)`), mirroring how `DownloadFullVideoForSecondaryAudio` is already defaulted there.
+- [x] 6.4 Add descriptive helper text near the control explaining the tradeoff (Matroska vs. MP4/podcast compatibility), matching the style of existing `field-desc` text.
 - [ ] 6.5 Run `npm run build` in the VueJS directory to confirm the frontend still builds.
 
 ## 7. Tests

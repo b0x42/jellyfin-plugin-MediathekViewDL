@@ -16,7 +16,8 @@ export const SubscriptionFactory = {
       AllowFallbackToLowerQuality: defaults.DownloadSettings?.AllowFallbackToLowerQuality ?? true,
       EnhancedDuplicateDetection: defaults.DownloadSettings?.EnhancedDuplicateDetection || false,
       QualityCheckWithUrl: defaults.DownloadSettings?.QualityCheckWithUrl || false,
-      DownloadFullVideoForSecondaryAudio: defaults.DownloadSettings?.DownloadFullVideoForSecondaryAudio || false
+      DownloadFullVideoForSecondaryAudio: defaults.DownloadSettings?.DownloadFullVideoForSecondaryAudio || false,
+      AudioContainerFormat: defaults.DownloadSettings?.AudioContainerFormat || 'M4a'
     },
     Series: {
       EnforceSeriesParsing: defaults.SeriesSettings?.EnforceSeriesParsing || false,

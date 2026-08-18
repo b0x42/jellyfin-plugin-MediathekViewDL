@@ -45,6 +45,7 @@ const defMaxDuration = ref('')
 // Subscription Defaults - Download
 const defUseStreamingUrlFiles = ref(false)
 const defDownloadFullVideoSecondaryAudio = ref(false)
+const defAudioContainerFormat = ref('M4a')
 const defAlwaysCreateSubfolder = ref(false)
 const defEnhancedDuplicateDetection = ref(false)
 const defAllowFallbackToLowerQuality = ref(true)
@@ -133,6 +134,7 @@ async function loadConfig() {
 
     defUseStreamingUrlFiles.value = defDl.UseStreamingUrlFiles ?? false
     defDownloadFullVideoSecondaryAudio.value = defDl.DownloadFullVideoForSecondaryAudio ?? false
+    defAudioContainerFormat.value = defDl.AudioContainerFormat ?? 'M4a'
     defAlwaysCreateSubfolder.value = defDl.AlwaysCreateSubfolder ?? false
     defEnhancedDuplicateDetection.value = defDl.EnhancedDuplicateDetection ?? false
     defAllowFallbackToLowerQuality.value = defDl.AllowFallbackToLowerQuality !== undefined ? defDl.AllowFallbackToLowerQuality : true
@@ -211,6 +213,7 @@ async function saveConfig() {
       DownloadSettings: {
         UseStreamingUrlFiles: defUseStreamingUrlFiles.value,
         DownloadFullVideoForSecondaryAudio: defDownloadFullVideoSecondaryAudio.value,
+        AudioContainerFormat: defAudioContainerFormat.value,
         AlwaysCreateSubfolder: defAlwaysCreateSubfolder.value,
         EnhancedDuplicateDetection: defEnhancedDuplicateDetection.value,
         AllowFallbackToLowerQuality: defAllowFallbackToLowerQuality.value,
@@ -495,6 +498,14 @@ onMounted(() => {
             <div class="checkbox-field">
               <label><input v-model="defDownloadFullVideoSecondaryAudio" type="checkbox"> Vollständiges Video für sekundäre Audiosprachen</label>
             </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Standard-Container-Format für reine Audio-Downloads</label>
+            <select v-model="defAudioContainerFormat" class="field-input">
+              <option value="M4a">.m4a (empfohlen für Podcast-/Audio-Apps)</option>
+              <option value="Mka">.mka (Matroska, primär für Jellyfin selbst)</option>
+            </select>
+            <p class="field-desc">Standardwert für neue Abonnements. .m4a wird von externen Podcast- und Audio-Apps deutlich besser unterstützt als .mka. Gilt nur für reine Audio-Downloads (z.B. sekundäre Audiosprachen ohne vollständiges Video); die Audiospur wird in beiden Fällen ohne erneutes Kodieren übernommen.</p>
           </div>
           <div class="checkbox-field">
             <label><input v-model="defAlwaysCreateSubfolder" type="checkbox"> Unterordner für Abo erstellen</label>
