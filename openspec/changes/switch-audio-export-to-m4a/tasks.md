@@ -8,28 +8,28 @@
 
 ## 2. FFmpeg Service
 
-- [ ] 2.1 Determine whether `IFFmpegService.ExtractAudioAsync` (the local-file variant) has any current caller in the codebase. If it is dead code, remove it as part of this change instead of updating it; if it is called, identify the caller and include it in scope for the format parameter change below. Record the finding so design.md's hedge ("if it remains in use") is resolved before implementation.
-- [ ] 2.2 Update `IFFmpegService.ExtractAudioFromWebAsync` signature to accept the target `AudioContainerFormat` (and optional `MediaMetadata`), updating XML doc comments.
-- [ ] 2.3 Based on 2.1's finding, either update `IFFmpegService.ExtractAudioAsync` signature similarly for consistency, or remove it (and its implementation/tests) if unused.
-- [ ] 2.4 In `FFmpegService`, map `AudioContainerFormat.Mka` -> `-f matroska` and `AudioContainerFormat.M4a` -> `-f mp4`, keeping `-acodec copy` unchanged for both.
-- [ ] 2.5 When format is `M4a` and metadata is provided, add `-movflags +use_metadata_tags` before the freeform `-metadata MediathekViewDL=<json>` argument; when format is `Mka`, embed metadata via `-metadata MediathekViewDL=<json>` as `DownloadFileAsync` already does for video.
-- [ ] 2.6 Preserve existing language (`-metadata:s:a:0 language=...`) and disposition (`-disposition:a:0 ...`) argument construction unchanged for both formats.
+- [x] 2.1 Determine whether `IFFmpegService.ExtractAudioAsync` (the local-file variant) has any current caller in the codebase. If it is dead code, remove it as part of this change instead of updating it; if it is called, identify the caller and include it in scope for the format parameter change below. Record the finding so design.md's hedge ("if it remains in use") is resolved before implementation.
+- [x] 2.2 Update `IFFmpegService.ExtractAudioFromWebAsync` signature to accept the target `AudioContainerFormat` (and optional `MediaMetadata`), updating XML doc comments.
+- [x] 2.3 Based on 2.1's finding, either update `IFFmpegService.ExtractAudioAsync` signature similarly for consistency, or remove it (and its implementation/tests) if unused.
+- [x] 2.4 In `FFmpegService`, map `AudioContainerFormat.Mka` -> `-f matroska` and `AudioContainerFormat.M4a` -> `-f mp4`, keeping `-acodec copy` unchanged for both.
+- [x] 2.5 When format is `M4a` and metadata is provided, add `-movflags +use_metadata_tags` before the freeform `-metadata MediathekViewDL=<json>` argument; when format is `Mka`, embed metadata via `-metadata MediathekViewDL=<json>` as `DownloadFileAsync` already does for video.
+- [x] 2.6 Preserve existing language (`-metadata:s:a:0 language=...`) and disposition (`-disposition:a:0 ...`) argument construction unchanged for both formats.
 
 ## 3. Audio Extraction Handler
 
-- [ ] 3.1 In `AudioExtractionHandler.ExecuteAsync`, read the subscription's `Download.AudioContainerFormat` (via `job`/whatever reference the handler has to the owning subscription) before building the temp file path. No fallback-resolution step is needed - read the field directly.
-- [ ] 3.2 Update `TempFileHelper.GetTempFilePath` call to use the correct temp extension (`.mka` or `.m4a`) based on the format read in 3.1.
-- [ ] 3.3 Pass the format and `job.MediaMetadata` through to `_ffmpegService.ExtractAudioFromWebAsync`.
+- [x] 3.1 Add `AudioContainerFormat` to `DownloadJob`, populated by `SubscriptionProcessor` from `subscription.Download.AudioContainerFormat` when building jobs (manual-download job creation sites in `DownloadsController` never produce `AudioExtraction` items, so they are left at the type's default). `AudioExtractionHandler.ExecuteAsync` reads `job.AudioContainerFormat` directly - no fallback-resolution step needed.
+- [x] 3.2 Update `TempFileHelper.GetTempFilePath` call to use the correct temp extension (`.mka` or `.m4a`) based on `job.AudioContainerFormat`.
+- [x] 3.3 Pass the format and `job.MediaMetadata` through to `_ffmpegService.ExtractAudioFromWebAsync`.
 
 ## 4. File Naming
 
-- [ ] 4.1 Update `FileNameBuilderService.BuildFileName` so the `FileType.Audio` case selects `.mka` or `.m4a` based on `subscription.Download.AudioContainerFormat` directly (no fallback resolution).
-- [ ] 4.2 Confirm `GenerateDownloadPaths`/`DownloadPaths.MainFilePath` end-to-end produce the correct extension for both settings values.
-- [ ] 4.3 Confirm `AudioContainerFormat` has no effect when `GetTargetMainType` resolves to `FileType.Strm` (i.e. `UseStreamingUrlFiles` is enabled) - no ffmpeg extraction happens in that path, so the setting is only relevant when the target type is `FileType.Audio`. Add a code comment noting this if not already obvious from control flow.
+- [x] 4.1 Update `FileNameBuilderService.BuildFileName` so the `FileType.Audio` case selects `.mka` or `.m4a` based on `subscription.Download.AudioContainerFormat` directly (no fallback resolution).
+- [x] 4.2 Confirm `GenerateDownloadPaths`/`DownloadPaths.MainFilePath` end-to-end produce the correct extension for both settings values.
+- [x] 4.3 Confirm `AudioContainerFormat` has no effect when `GetTargetMainType` resolves to `FileType.Strm` (i.e. `UseStreamingUrlFiles` is enabled) - no ffmpeg extraction happens in that path, so the setting is only relevant when the target type is `FileType.Audio`. Add a code comment noting this if not already obvious from control flow.
 
 ## 5. Library Scanning
 
-- [ ] 5.1 Add `.m4a` to `LocalMediaScanner._videoExtensions` (or the appropriate recognized-audio-extensions list).
+- [x] 5.1 Add `.m4a` to `LocalMediaScanner._videoExtensions` (or the appropriate recognized-audio-extensions list).
 
 ## 6. Vue.js Configuration UI
 

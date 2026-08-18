@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.MediathekViewDL.Configuration.SubscriptionSettings;
 
 namespace Jellyfin.Plugin.MediathekViewDL.Services.Downloading.Clients;
 
@@ -11,28 +12,20 @@ namespace Jellyfin.Plugin.MediathekViewDL.Services.Downloading.Clients;
 public interface IFFmpegService
 {
     /// <summary>
-    /// Extracts the audio track from a video file and saves it as an MKA file.
-    /// </summary>
-    /// <param name="tempVideoPath">The path to the temporary input video file.</param>
-    /// <param name="outputAudioPath">The path for the output MKA audio file.</param>
-    /// <param name="languageCode">The 3-letter language code (e.g., 'eng') to set in the metadata.</param>
-    /// <param name="progress">The progress reporter.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>True if the extraction was successful, otherwise false.</returns>
-    Task<bool> ExtractAudioAsync(string tempVideoPath, string outputAudioPath, string languageCode, IProgress<double> progress, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Extracts the audio track from a url and saves it as an MKA file.
+    /// Extracts the audio track from a url and saves it in the requested container format.
+    /// The source audio codec is always copied without re-encoding.
     /// </summary>
     /// <param name="videoUrl">The path to the temporary input video file.</param>
-    /// <param name="outputAudioPath">The path for the output MKA audio file.</param>
+    /// <param name="outputAudioPath">The path for the output audio file.</param>
     /// <param name="languageCode">The 3-letter language code (e.g., 'eng') to set in the metadata.</param>
     /// <param name="setOriginalLanguageTag">Whether to tag the audio as original language.</param>
     /// <param name="isAudioDescription">Whether the audio track is an audio description.</param>
+    /// <param name="containerFormat">The output container format (Matroska Audio or MPEG-4 Audio).</param>
     /// <param name="progress">The progress reporter.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <param name="metadata">Optional metadata that will be embedded in the output container under the key <c>MediathekViewDL</c>.</param>
     /// <returns>True if the extraction was successful, otherwise false.</returns>
-    Task<bool> ExtractAudioFromWebAsync(string videoUrl, string outputAudioPath, string languageCode, bool setOriginalLanguageTag, bool isAudioDescription, IProgress<double> progress, CancellationToken cancellationToken);
+    Task<bool> ExtractAudioFromWebAsync(string videoUrl, string outputAudioPath, string languageCode, bool setOriginalLanguageTag, bool isAudioDescription, AudioContainerFormat containerFormat, IProgress<double> progress, CancellationToken cancellationToken, Metadata.MediaMetadata? metadata = null);
 
     /// <summary>
     /// Gets the media information (width, height, duration) from a remote URL or local file.
