@@ -211,4 +211,59 @@ public class AudioExtractionHandlerTests
             }
         }
     }
+
+    [Fact]
+    public async Task ExecuteAsync_ShouldSetOriginalLanguageTagFalse_ForGermanContent_ViaDownloadAudioOnlyForPrimaryLanguage()
+    {
+        // Arrange: German content only reaches audio-only extraction via DownloadAudioOnlyForPrimaryLanguage.
+        // setOriginalLanguageTag is derived from itemInfo.Language != "deu", so it must be false here -
+        // German is the primary/default language, not an "original version" (OV) track.
+        bool? capturedSetOriginalLanguageTag = null;
+
+        _ffmpegServiceMock
+            .Setup(s => s.ExtractAudioFromWebAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<bool>(),
+                It.IsAny<bool>(),
+                It.IsAny<AudioContainerFormat>(),
+                It.IsAny<IProgress<double>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<MediaMetadata?>()))
+            .Returns<string, string, string, bool, bool, AudioContainerFormat, IProgress<double>, CancellationToken, MediaMetadata?>(
+                (_, tempPath, _, setOriginalLanguageTag, _, _, _, _, _) =>
+                {
+                    capturedSetOriginalLanguageTag = setOriginalLanguageTag;
+                    System.IO.File.WriteAllText(tempPath, "stub-audio-content");
+                    return Task.FromResult(true);
+                });
+
+        var job = new DownloadJob
+        {
+            ItemId = "test-item",
+            Title = "German Show",
+            ItemInfo = new VideoInfo { Title = "German Show", Language = "deu" },
+            AudioContainerFormat = AudioContainerFormat.M4a,
+        };
+        var destPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"dest_{Guid.NewGuid():N}.m4a");
+        var item = new DownloadItem { SourceUrl = "https://example.com/video.mp4", DestinationPath = destPath, JobType = DownloadType.AudioExtraction };
+
+        try
+        {
+            // Act
+            var result = await _handler.ExecuteAsync(item, job, Mock.Of<IProgress<double>>(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result);
+            Assert.False(capturedSetOriginalLanguageTag);
+        }
+        finally
+        {
+            if (System.IO.File.Exists(destPath))
+            {
+                System.IO.File.Delete(destPath);
+            }
+        }
+    }
 }

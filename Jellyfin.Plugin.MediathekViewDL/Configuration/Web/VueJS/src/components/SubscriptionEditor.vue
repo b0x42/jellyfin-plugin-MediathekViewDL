@@ -267,16 +267,6 @@ function updateDate(target, field, value) {
                             <p class="field-desc">Gilt nur, wenn für diesen Titel eine reine Audiospur extrahiert wird (z.B. sekundäre Audiosprache ohne vollständiges Video, deutsche Sprache mit aktivierter Option "Nur Audio", oder Audiodeskription). .m4a wird von externen Podcast- und Audio-Apps deutlich besser unterstützt als .mka, welches primär innerhalb von Jellyfin funktioniert. Die Audiospur wird in beiden Fällen ohne erneutes Kodieren übernommen (kein Qualitätsverlust). Bereits heruntergeladene Dateien werden bei einer Änderung nicht konvertiert.</p>
                         </div>
                     </div>
-                    <div v-else class="sub-options">
-                        <div class="field">
-                            <label>Container-Format für reine Audio-Downloads</label>
-                            <select v-model="editedSub.Download.AudioContainerFormat" class="field-input">
-                                <option value="M4a">.m4a (empfohlen für Podcast-/Audio-Apps)</option>
-                                <option value="Mka">.mka (Matroska, primär für Jellyfin selbst)</option>
-                            </select>
-                            <p class="field-desc">Gilt nur, wenn für diesen Titel eine reine Audiospur extrahiert wird (z.B. Audiodeskription ohne vollständiges Video). .m4a wird von externen Podcast- und Audio-Apps deutlich besser unterstützt als .mka, welches primär innerhalb von Jellyfin funktioniert. Die Audiospur wird in beiden Fällen ohne erneutes Kodieren übernommen (kein Qualitätsverlust). Bereits heruntergeladene Dateien werden bei einer Änderung nicht konvertiert.</p>
-                        </div>
-                    </div>
                     <div class="checkbox-field">
                         <label>
                             <input v-model="editedSub.Download.AlwaysCreateSubfolder" type="checkbox"> Unterordner für dieses Abo erstellen
