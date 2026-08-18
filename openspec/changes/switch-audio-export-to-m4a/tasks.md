@@ -3,8 +3,8 @@
 - [x] 1.1 Add `AudioContainerFormat` enum (`Mka`, `M4a`) to the `Configuration` (or appropriate shared) namespace, with an XML summary comment on the enum and on each value (per project convention of XML summary comments on public members).
 - [x] 1.2 Add `AudioContainerFormat` property (default `M4a`) to `BaseDownloadSettings`, with an XML summary comment documenting the default and its rationale (podcast/external-player compatibility).
 - [x] 1.3 Verify the property is available on `DownloadSettings` (per-subscription) via inheritance from `BaseDownloadSettings`, and defaults to `M4a` for a newly constructed `Subscription`.
-- [ ] 1.4 Optionally wire `AudioContainerFormat` into `SubscriptionDefaults.DownloadSettings` purely as a Vue.js form pre-fill value (see task 6.1/6.3) - this has no runtime effect on the download pipeline; do not add server-side resolution logic that reads `SubscriptionDefaults` at download time, since no such mechanism exists for any other setting today.
-- [ ] 1.5 Confirm the new enum property round-trips correctly through the plugin's `configuration.xml` persistence (`IXmlSerializer`/.NET `XmlSerializer`) - verify a `Subscription`/`PluginConfiguration` XML fixture saved before this change (with no `<AudioContainerFormat>` element present) deserializes with the property defaulting to `M4a` via the record's property initializer.
+- [x] 1.4 Optionally wire `AudioContainerFormat` into `SubscriptionDefaults.DownloadSettings` purely as a Vue.js form pre-fill value (see task 6.1/6.3) - this has no runtime effect on the download pipeline; do not add server-side resolution logic that reads `SubscriptionDefaults` at download time, since no such mechanism exists for any other setting today.
+- [x] 1.5 Confirm the new enum property round-trips correctly through the plugin's `configuration.xml` persistence (`IXmlSerializer`/.NET `XmlSerializer`) - verify a `Subscription`/`PluginConfiguration` XML fixture saved before this change (with no `<AudioContainerFormat>` element present) deserializes with the property defaulting to `M4a` via the record's property initializer.
 
 ## 2. FFmpeg Service
 
@@ -41,17 +41,17 @@
 
 ## 7. Tests
 
-- [ ] 7.1 Update existing `FileNameBuilderServiceTests` default-path assertions (e.g. `GenerateDownloadPaths_ShouldAppendLanguage_WhenNotGerman`) to expect `.m4a` for the default configuration; add a new explicit-override test asserting `.mka` is produced when `AudioContainerFormat: Mka` is set.
-- [ ] 7.2 Add `FFmpegService` tests (or equivalent) verifying muxer argument selection (`-f matroska` vs `-f mp4`) and the `-movflags +use_metadata_tags` argument only appearing for `.m4a` with metadata present.
-- [ ] 7.3 Add `AudioExtractionHandler` tests verifying the subscription's format value drives both the temp file extension and the arguments passed to `IFFmpegService`, covering both the `M4a` default and an explicit `Mka` value.
-- [ ] 7.4 Add a `LocalMediaScanner` test confirming `.m4a` files are recognized.
-- [ ] 7.5 Search the test suite for any other hardcoded `.mka` default-path expectations and update them consistently.
-- [ ] 7.6 Add a config serialization/deserialization test confirming a `PluginConfiguration`/`Subscription` XML fixture without an `<AudioContainerFormat>` element deserializes to `M4a` (covers task 1.5).
-- [ ] 7.7 Run `dotnet test Jellyfin.Plugin.MediathekViewDL.sln` and confirm all tests pass.
+- [x] 7.1 Update existing `FileNameBuilderServiceTests` default-path assertions (e.g. `GenerateDownloadPaths_ShouldAppendLanguage_WhenNotGerman`) to expect `.m4a` for the default configuration; add a new explicit-override test asserting `.mka` is produced when `AudioContainerFormat: Mka` is set.
+- [x] 7.2 Add `FFmpegService` tests (or equivalent) verifying muxer argument selection (`-f matroska` vs `-f mp4`) and the `-movflags +use_metadata_tags` argument only appearing for `.m4a` with metadata present.
+- [x] 7.3 Add `AudioExtractionHandler` tests verifying the subscription's format value drives both the temp file extension and the arguments passed to `IFFmpegService`, covering both the `M4a` default and an explicit `Mka` value.
+- [x] 7.4 Add a `LocalMediaScanner` test confirming `.m4a` files are recognized.
+- [x] 7.5 Search the test suite for any other hardcoded `.mka` default-path expectations and update them consistently.
+- [x] 7.6 Add a config serialization/deserialization test confirming a `PluginConfiguration`/`Subscription` XML fixture without an `<AudioContainerFormat>` element deserializes to `M4a` (covers task 1.5).
+- [x] 7.7 Run `dotnet test Jellyfin.Plugin.MediathekViewDL.sln` and confirm all tests pass.
 
 ## 8. Build
 
-- [ ] 8.1 Run `dotnet build Jellyfin.Plugin.MediathekViewDL.sln` and confirm it succeeds with `TreatWarningsAsErrors=true`.
+- [x] 8.1 Run `dotnet build Jellyfin.Plugin.MediathekViewDL.sln` and confirm it succeeds with `TreatWarningsAsErrors=true`.
 
 ## 9. Documentation
 

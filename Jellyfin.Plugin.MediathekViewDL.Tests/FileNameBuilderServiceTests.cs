@@ -213,10 +213,37 @@ namespace Jellyfin.Plugin.MediathekViewDL.Tests
             var paths = service.GenerateDownloadPaths(videoInfo, subscription, DownloadContext.Subscription);
 
             // Assert
-            // Expect: EnglishMovie.eng.mka (audio only by default for non-German unless configured otherwise)
-            // Wait, logic says: if (videoInfo.Language == "deu" || subscription.DownloadFullVideoForSecondaryAudio) -> .mkv
-            // else -> .mka
-            
+            // Expect: EnglishMovie.eng.m4a (audio only by default for non-German unless configured otherwise)
+            // Logic says: if (videoInfo.Language == "deu" || subscription.DownloadFullVideoForSecondaryAudio) -> .mkv
+            // else -> .m4a (default AudioContainerFormat) or .mka if explicitly configured
+
+            Assert.Contains(".eng.m4a", paths.MainFilePath);
+        }
+
+        [Fact]
+        public void GenerateDownloadPaths_ShouldReturnMka_WhenNotGerman_AndAudioContainerFormatSetToMka()
+        {
+            // Arrange
+            var config = new PluginConfiguration();
+            config.Paths.DefaultDownloadPath = "/tmp/downloads";
+            _configProviderMock.Setup(x => x.ConfigurationOrNull).Returns(config);
+            var service = new FileNameBuilderService(_loggerMock.Object, _configProviderMock.Object, _libraryManagerMock.Object);
+
+            var videoInfo = new VideoInfo
+            {
+                Title = "EnglishMovie",
+                Language = "eng"
+            };
+            var subscription = new Subscription
+            {
+                Name = "TestSub",
+                Download = new DownloadSettings { AudioContainerFormat = AudioContainerFormat.Mka }
+            };
+
+            // Act
+            var paths = service.GenerateDownloadPaths(videoInfo, subscription, DownloadContext.Subscription);
+
+            // Assert
             Assert.Contains(".eng.mka", paths.MainFilePath);
         }
 
