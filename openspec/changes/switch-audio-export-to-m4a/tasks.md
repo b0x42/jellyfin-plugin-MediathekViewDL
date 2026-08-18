@@ -55,7 +55,7 @@
 
 ## 9. Documentation
 
-- [ ] 9.1 Update `README.md` (German) to document the new `AudioContainerFormat` setting under the subscription/download settings section, alongside the existing `.strm` and metadata-embedding documentation: explain both `.m4a` and `.mka` options, state that `.m4a` is the default (changed from the previous hardcoded `.mka`), and explain how to set `.mka` per subscription to restore prior behavior.
-- [ ] 9.2 Update the README's Table of Contents / feature table entries if the new setting warrants a mention there (matching how `.strm` support is already called out in the feature table).
-- [ ] 9.3 Cross-check that the Vue.js helper text added in task 6.4 and the README wording are consistent (same tradeoff explanation - Matroska vs. MP4/podcast compatibility - so users see the same guidance in both places).
-- [ ] 9.4 Update XML summary doc comments on any modified public API surface not already covered by tasks 1.1/1.2/2.2 (e.g. `AudioExtractionHandler`, `FileNameBuilderService` if their public doc comments describe the old hardcoded `.mka` behavior).
+- [x] 9.1 Update `README.md` (German) to document the new `AudioContainerFormat` setting under the subscription/download settings section, alongside the existing `.strm` and metadata-embedding documentation: explain both `.m4a` and `.mka` options, state that `.m4a` is the default (changed from the previous hardcoded `.mka`), and explain how to set `.mka` per subscription to restore prior behavior.
+- [x] 9.2 Update the README's Table of Contents / feature table entries if the new setting warrants a mention there (matching how `.strm` support is already called out in the feature table).
+- [x] 9.3 Cross-check that the Vue.js helper text added in task 6.4 and the README wording are consistent (same tradeoff explanation - Matroska vs. MP4/podcast compatibility - so users see the same guidance in both places).
+- [x] 9.4 Update XML summary doc comments on any modified public API surface not already covered by tasks 1.1/1.2/2.2 (e.g. `AudioExtractionHandler`, `FileNameBuilderService` if their public doc comments describe the old hardcoded `.mka` behavior).
