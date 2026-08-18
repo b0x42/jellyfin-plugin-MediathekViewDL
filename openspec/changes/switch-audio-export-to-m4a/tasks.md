@@ -2,9 +2,9 @@
 
 - [ ] 1.1 Add `AudioContainerFormat` enum (`Mka`, `M4a`) to the `Configuration` (or appropriate shared) namespace, with an XML summary comment on the enum and on each value (per project convention of XML summary comments on public members).
 - [ ] 1.2 Add `AudioContainerFormat` property (default `M4a`) to `BaseDownloadSettings`, with an XML summary comment documenting the default and its rationale (podcast/external-player compatibility).
-- [ ] 1.3 Verify the property is available and defaults correctly on both `DownloadSettings` (per-subscription) and wherever `SubscriptionDefaults` resolves download defaults.
-- [ ] 1.4 Add/confirm config resolution logic so a subscription without an explicit override falls back to the global default value, consistent with how sibling `BaseDownloadSettings` fields resolve today.
-- [ ] 1.5 Confirm the new enum property round-trips correctly through the plugin's configuration persistence (`System.Text.Json` serialization of `PluginConfiguration`, consistent with the project's "System.Text.Json only" rule) - verify existing configs without the field deserialize to the `M4a` default rather than failing or defaulting to the enum's zero-value if that differs.
+- [ ] 1.3 Verify the property is available on `DownloadSettings` (per-subscription) via inheritance from `BaseDownloadSettings`, and defaults to `M4a` for a newly constructed `Subscription`.
+- [ ] 1.4 Optionally wire `AudioContainerFormat` into `SubscriptionDefaults.DownloadSettings` purely as a Vue.js form pre-fill value (see task 6.1/6.3) - this has no runtime effect on the download pipeline; do not add server-side resolution logic that reads `SubscriptionDefaults` at download time, since no such mechanism exists for any other setting today.
+- [ ] 1.5 Confirm the new enum property round-trips correctly through the plugin's configuration persistence - verify a `Subscription`/`PluginConfiguration` saved before this change (with no `AudioContainerFormat` property present) deserializes with the property defaulting to `M4a` rather than to the enum's implicit zero value, which would silently produce the opposite of the intended default if `Mka` were declared first in the enum.
 
 ## 2. FFmpeg Service
 
@@ -17,13 +17,13 @@
 
 ## 3. Audio Extraction Handler
 
-- [ ] 3.1 In `AudioExtractionHandler.ExecuteAsync`, resolve the effective `AudioContainerFormat` (subscription override falling back to global default) before building the temp file path.
-- [ ] 3.2 Update `TempFileHelper.GetTempFilePath` call to use the correct temp extension (`.mka` or `.m4a`) based on the resolved format.
-- [ ] 3.3 Pass the resolved format and `job.MediaMetadata` through to `_ffmpegService.ExtractAudioFromWebAsync`.
+- [ ] 3.1 In `AudioExtractionHandler.ExecuteAsync`, read the subscription's `Download.AudioContainerFormat` (via `job`/whatever reference the handler has to the owning subscription) before building the temp file path. No fallback-resolution step is needed - read the field directly.
+- [ ] 3.2 Update `TempFileHelper.GetTempFilePath` call to use the correct temp extension (`.mka` or `.m4a`) based on the format read in 3.1.
+- [ ] 3.3 Pass the format and `job.MediaMetadata` through to `_ffmpegService.ExtractAudioFromWebAsync`.
 
 ## 4. File Naming
 
-- [ ] 4.1 Update `FileNameBuilderService.BuildFileName` so the `FileType.Audio` case selects `.mka` or `.m4a` based on the effective `AudioContainerFormat` for the given subscription (resolving subscription override vs. global default the same way as task 1.4).
+- [ ] 4.1 Update `FileNameBuilderService.BuildFileName` so the `FileType.Audio` case selects `.mka` or `.m4a` based on `subscription.Download.AudioContainerFormat` directly (no fallback resolution).
 - [ ] 4.2 Confirm `GenerateDownloadPaths`/`DownloadPaths.MainFilePath` end-to-end produce the correct extension for both settings values.
 - [ ] 4.3 Confirm `AudioContainerFormat` has no effect when `GetTargetMainType` resolves to `FileType.Strm` (i.e. `UseStreamingUrlFiles` is enabled) - no ffmpeg extraction happens in that path, so the setting is only relevant when the target type is `FileType.Audio`. Add a code comment noting this if not already obvious from control flow.
 
@@ -33,9 +33,9 @@
 
 ## 6. Vue.js Configuration UI
 
-- [ ] 6.1 Add a format selector (e.g. `<select>` with `Mka`/`M4a` options) to `SettingsTab.vue` for the global `SubscriptionDefaults.DownloadSettings.AudioContainerFormat` default.
-- [ ] 6.2 Add the same selector to `SubscriptionEditor.vue` for the per-subscription `Download.AudioContainerFormat` override.
-- [ ] 6.3 Wire the new field into `PluginConfig.vue`'s defaults-apply logic (mirroring how `UseStreamingUrlFiles` is copied into `cfg.SubscriptionDefaults.DownloadSettings`).
+- [ ] 6.1 Add a format selector (e.g. `<select>` with `Mka`/`M4a` options) to `SettingsTab.vue` for `SubscriptionDefaults.DownloadSettings.AudioContainerFormat` - this only pre-fills new-subscription forms client-side (per Decision 1/task 1.4), consistent with how `UseStreamingUrlFiles` behaves there today.
+- [ ] 6.2 Add the same selector to `SubscriptionEditor.vue` for the actual per-subscription `Download.AudioContainerFormat` value - this is the field that has real runtime effect.
+- [ ] 6.3 Wire the new field into `PluginConfig.vue`'s defaults-apply/pre-fill logic (mirroring how `UseStreamingUrlFiles` is copied into `cfg.SubscriptionDefaults.DownloadSettings` and applied when initializing a new subscription's form state).
 - [ ] 6.4 Add descriptive helper text near the control explaining the tradeoff (Matroska vs. MP4/podcast compatibility), matching the style of existing `field-desc` text.
 - [ ] 6.5 Run `npm run build` in the VueJS directory to confirm the frontend still builds.
 
@@ -43,7 +43,7 @@
 
 - [ ] 7.1 Update existing `FileNameBuilderServiceTests` default-path assertions (e.g. `GenerateDownloadPaths_ShouldAppendLanguage_WhenNotGerman`) to expect `.m4a` for the default configuration; add a new explicit-override test asserting `.mka` is produced when `AudioContainerFormat: Mka` is set.
 - [ ] 7.2 Add `FFmpegService` tests (or equivalent) verifying muxer argument selection (`-f matroska` vs `-f mp4`) and the `-movflags +use_metadata_tags` argument only appearing for `.m4a` with metadata present.
-- [ ] 7.3 Add `AudioExtractionHandler` tests verifying the resolved format drives both the temp file extension and the arguments passed to `IFFmpegService`, covering both the `M4a` default and an explicit `Mka` override.
+- [ ] 7.3 Add `AudioExtractionHandler` tests verifying the subscription's format value drives both the temp file extension and the arguments passed to `IFFmpegService`, covering both the `M4a` default and an explicit `Mka` value.
 - [ ] 7.4 Add a `LocalMediaScanner` test confirming `.m4a` files are recognized.
 - [ ] 7.5 Search the test suite for any other hardcoded `.mka` default-path expectations and update them consistently.
 - [ ] 7.6 Add a config serialization/deserialization test confirming a `PluginConfiguration` without an explicit `AudioContainerFormat` value deserializes to `M4a` (covers task 1.5).

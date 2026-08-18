@@ -5,16 +5,16 @@ See proposal.md - Why. Relevant current state:
 - `FFmpegService.ExtractAudioFromWebAsync`/`ExtractAudioAsync` hardcode `-f matroska` and `-acodec copy`; there is no format parameter today.
 - `FileNameBuilderService.BuildFileName` hardcodes `.mka` for `FileType.Audio` with no configuration input.
 - `AudioExtractionHandler.ExecuteAsync` does not pass `job.MediaMetadata` to the FFmpeg call at all today - metadata embedding for audio-only exports does not currently exist (only `.mkv`/`.strm` downloads embed it, via `FFmpegDownloadHandler`/`StreamingUrlHandler`).
-- Config settings that affect the download pipeline follow a two-level pattern: `BaseDownloadSettings` (shared record) is used both by `DownloadSettings` (per-subscription, via `Subscription.Download`) and implicitly by `SubscriptionDefaults` (global defaults applied when a subscription doesn't override). The Vue.js UI (`SettingsTab.vue` for defaults, `SubscriptionEditor.vue` for per-subscription overrides) mirrors these fields 1:1.
+- Config settings that affect the download pipeline are plain properties on `BaseDownloadSettings` (shared record), used by `DownloadSettings` (per-subscription, via `Subscription.Download`). There is **no runtime "global default" resolution**: `SubscriptionDefaults.DownloadSettings` exists but its own doc comment says "Currently without function" - no C# code reads it at runtime. It is only consumed client-side by the Vue.js UI (`SetupWizard.vue`, `SettingsTab.vue`, `PluginConfig.vue`) to pre-fill the form shown when a user creates a new subscription; once a `Subscription` is saved, every consumer (`FileNameBuilderService`, `AudioExtractionHandler`, etc.) reads `subscription.Download.X` directly with no fallback beyond the C# property's own default value.
 
 ## Goals / Non-Goals
 
 **Goals:**
-- Add a container format choice (`Mka` | `M4a`) usable at both the global-default and per-subscription level, following the existing settings pattern exactly.
-- Default new installs and upgrades to `M4a` for out-of-the-box podcast/external-player compatibility, while leaving already-downloaded files untouched.
+- Add a container format choice (`Mka` | `M4a`) as a plain per-subscription setting on `BaseDownloadSettings`, matching how every other field on that record behaves today (a C#-level default, no runtime fallback resolution).
+- Default new subscriptions to `M4a` for out-of-the-box podcast/external-player compatibility, while leaving already-downloaded files untouched.
 - Keep `-acodec copy` (no transcoding) for both formats.
 - Embed the existing `MediaMetadata` JSON payload into audio-only outputs for both formats (a new capability for the audio-extraction path, matching what already happens for `.mkv`/`.strm`).
-- Allow users who need the previous `.mka` default to restore it via a single global setting.
+- Optionally let the Vue.js "subscription defaults" pre-fill mechanism (`SubscriptionDefaults.DownloadSettings`) include this field, consistent with how it already pre-fills `UseStreamingUrlFiles` - purely a UI convenience, not a runtime behavior.
 
 **Non-Goals:**
 - Adding more container formats (e.g. `.opus`, `.mp3`) - those would require actual transcoding and are out of scope.
@@ -25,15 +25,15 @@ See proposal.md - Why. Relevant current state:
 
 ### 1. New enum `AudioContainerFormat { Mka, M4a }` on `BaseDownloadSettings`
 
-Placing it on `BaseDownloadSettings` (rather than a new standalone settings group) reuses the existing inheritance already shared by `DownloadSettings` (per-subscription) and the defaults consumed through `SubscriptionDefaults.DownloadSettings`. This matches how `DownloadFullVideoForSecondaryAudio` and other download-shape toggles are already modeled, so resolution order (subscription override -> global default) requires no new plumbing beyond what config-resolution code already does for sibling settings.
+Placing it on `BaseDownloadSettings` (rather than a new standalone settings group) reuses the existing inheritance already shared by `DownloadSettings` (per-subscription). This matches how `DownloadFullVideoForSecondaryAudio` and other download-shape toggles are already modeled: a plain property with a C# default value and no runtime resolution step.
 
-Alternative considered: a separate top-level `AudioOptions` group (parallel to `DownloadOptions`). Rejected because the setting is subscription-scoped by requirement (per user's confirmed choice of "configurable" implying per-subscription control), and `BaseDownloadSettings` is exactly the record designed for that.
+Alternative considered: implement genuine "subscription override falls back to a live global default" resolution logic, wiring `SubscriptionDefaults.DownloadSettings.AudioContainerFormat` as a runtime fallback read at download time. Rejected after investigation - **no such resolution mechanism exists today for any `BaseDownloadSettings` field.** `SubscriptionDefaults` is documented as "Currently without function" and is only consumed by the Vue.js frontend to pre-fill new-subscription forms; introducing live fallback resolution just for this one field would be inconsistent with every sibling setting and a materially larger change than proposed. `AudioContainerFormat` therefore behaves exactly like `DownloadFullVideoForSecondaryAudio`: a static default, set once per subscription, with no separate "global" runtime value.
 
-Default value: `M4a`, for compatibility with external podcast/audio players out of the box. This is a deliberate behavior change for new downloads: existing installs that don't set the value explicitly will see newly downloaded audio-only files switch from `.mka` to `.m4a` after upgrading. No previously downloaded `.mka` files are touched or migrated (per the "no migration" goal) - only the default for *future* downloads changes. Users who need to keep `.mka` as their default must explicitly set `AudioContainerFormat: Mka` globally (or per subscription).
+Default value: `M4a`, for compatibility with external podcast/audio players out of the box. This is a deliberate behavior change for new downloads: subscriptions created without setting this field explicitly will produce `.m4a` instead of the old hardcoded `.mka`. No previously downloaded `.mka` files are touched or migrated (per the "no migration" goal) - only the default for *newly created subscriptions and their future downloads* changes. Existing subscriptions created before this change was deployed will have their `AudioContainerFormat` deserialize to whatever the missing-field default resolves to (see Decision 7) - this must also resolve to `M4a` for consistency, since there is no persisted value to distinguish an "old" subscription from a "new" one otherwise. Users who need `.mka` set `AudioContainerFormat: Mka` explicitly on that subscription.
 
 ### 2. FFmpeg muxer selection: `-f matroska` (`.mka`) vs `-f mp4` (`.m4a`)
 
-Both keep `-acodec copy`. `IFFmpegService.ExtractAudioFromWebAsync` gains a format parameter (enum, not a raw string) that the implementation maps to the muxer name and to the metadata-embedding strategy (see Decision 3). `AudioExtractionHandler` resolves the effective format (subscription override, falling back to global default) before calling the service, the same way other resolved settings are read in that handler's siblings (e.g. `FFmpegDownloadHandler` reading `_configProvider.Configuration.Download.ReadRate`).
+Both keep `-acodec copy`. `IFFmpegService.ExtractAudioFromWebAsync` gains a format parameter (enum, not a raw string) that the implementation maps to the muxer name and to the metadata-embedding strategy (see Decision 3). `AudioExtractionHandler` reads `job.ItemInfo`/the subscription's `Download.AudioContainerFormat` directly (no resolution step, per Decision 1) before calling the service.
 
 `IFFmpegService.ExtractAudioAsync` (the local-file-input variant) is a separate method from `ExtractAudioFromWebAsync` (the URL-input variant actually used by `AudioExtractionHandler`). Whether it needs the same treatment depends on whether it currently has a live caller - this is a factual question to resolve during implementation (task 2.1), not a design ambiguity: if unused, remove it rather than carry dead code through the format change; if used, apply the same format parameter for consistency.
 
@@ -63,7 +63,7 @@ Add `.m4a` to the existing `_videoExtensions` array (already named generically e
 
 ### 7. Config persistence of the new enum
 
-`PluginConfiguration` is persisted by Jellyfin server's plugin configuration store using `System.Text.Json` (per project convention: "`System.Text.Json` only"). A new enum property added to `BaseDownloadSettings` will serialize as its string name by default with `System.Text.Json`'s default enum handling (or as an integer if no `JsonStringEnumConverter` is configured project-wide) - the implementation must confirm which convention this project already uses for other enums (if any exist) and match it for consistency, and confirm that a config file saved before this change (with no `AudioContainerFormat` property present) deserializes with the property defaulting to `M4a` rather than to the enum's implicit zero value, which would silently produce the opposite of the intended default if `Mka` were declared first in the enum. This is verified by task 1.5/7.6, not left as an assumption.
+`PluginConfiguration` is persisted by Jellyfin server's plugin configuration store. Regardless of the exact serializer Jellyfin server uses under the hood, the concrete risk is the same one called out in Decision 1: a subscription record saved *before* this change exists on disk with no `AudioContainerFormat` property at all. On deserialization, that missing field must resolve to `AudioContainerFormat.M4a` (the new default) - not silently to the enum's implicit zero value, which would produce the opposite of the intended default if `Mka` were declared first in the enum. The implementation must declare `M4a` in a way that guarantees this (e.g. giving the property an explicit `= AudioContainerFormat.M4a` initializer on the record, and verifying deserialization of an old config without the field actually invokes that initializer rather than zero-initializing the enum). This is verified by task 1.5/7.6, not left as an assumption.
 
 ## Risks / Trade-offs
 
@@ -74,8 +74,8 @@ Add `.m4a` to the existing `_videoExtensions` array (already named generically e
 ## Migration Plan
 
 No data migration required (per user decision: existing `.mka` files are left as-is). Deployment is a standard plugin version bump:
-1. Ship the new setting defaulted to `M4a`.
-2. On upgrade, subscriptions/installs that don't explicitly set `AudioContainerFormat` start producing `.m4a` for new audio-only downloads; previously downloaded `.mka` files remain untouched on disk.
-3. Users who want to keep `.mka` set `AudioContainerFormat: Mka` globally or per subscription.
+1. Ship the new setting on `BaseDownloadSettings` defaulted to `M4a`.
+2. New subscriptions (and existing subscriptions whose saved config predates this field) resolve `AudioContainerFormat` to `M4a` on load; previously downloaded `.mka` files remain untouched on disk regardless.
+3. Users who want to keep `.mka` set `AudioContainerFormat: Mka` explicitly on the relevant subscription(s).
 4. Rollback: reverting the plugin version removes the setting and restores the old hardcoded `.mka` behavior; any subscriptions already producing `.m4a` files simply stop producing new ones after rollback, with no data loss to existing files either way.
 5. Call out the default change prominently in the release notes/README, since it is a behavior change for users who upgrade without reading the changelog.

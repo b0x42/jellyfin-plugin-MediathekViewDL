@@ -6,22 +6,17 @@ Defines the behavior of audio-only content exports (secondary-language audio ext
 
 ### Requirement: Configurable Audio Container Format
 
-The system SHALL support two audio-only output container formats: Matroska Audio (`.mka`) and MPEG-4 Audio (`.m4a`). The effective container format SHALL be determined by a per-subscription setting that falls back to a global default setting when not explicitly overridden. The default value of the global setting SHALL be `.m4a`, for compatibility with external podcast/audio players.
+The system SHALL support two audio-only output container formats: Matroska Audio (`.mka`) and MPEG-4 Audio (`.m4a`). Each subscription SHALL have its own `AudioContainerFormat` setting, which defaults to `.m4a` when a subscription is created without an explicit value, consistent with how other download settings on a subscription behave. The Vue.js configuration UI's "subscription defaults" pre-fill mechanism MAY be used to pre-populate this value when a user creates a new subscription, but the setting itself is a plain per-subscription value with no runtime fallback to a separate global setting.
 
 #### Scenario: Default format is M4A
 
-- **WHEN** a subscription does not override the audio container format and the global default has not been changed
-- **THEN** the system extracts audio-only downloads as `.m4a` files
+- **WHEN** a new subscription is created without explicitly setting the audio container format
+- **THEN** the subscription's audio container format is `.m4a`, and the system extracts audio-only downloads for that subscription as `.m4a` files
 
-#### Scenario: Global default changed to Matroska Audio
+#### Scenario: Subscription explicitly set to Matroska Audio
 
-- **WHEN** the global default audio container format is set to `.mka` and a subscription does not override it
-- **THEN** the system extracts audio-only downloads for that subscription as `.mka` files
-
-#### Scenario: Per-subscription override
-
-- **WHEN** a subscription explicitly sets its audio container format to `.mka` while the global default remains `.m4a`
-- **THEN** the system extracts audio-only downloads for that subscription as `.mka` files, and other subscriptions without an override remain `.m4a`
+- **WHEN** a subscription's audio container format is explicitly set to `.mka`
+- **THEN** the system extracts audio-only downloads for that subscription as `.mka` files, independent of any other subscription's setting
 
 ### Requirement: Lossless Codec Passthrough
 
@@ -62,11 +57,11 @@ The system SHALL embed the plugin's item metadata payload (identifying the sourc
 
 ### Requirement: No Migration of Existing Files
 
-Changing the audio container format setting SHALL NOT affect files that were already downloaded before the setting was changed. Only downloads performed after the setting takes effect SHALL use the newly selected format.
+Changing a subscription's audio container format setting SHALL NOT affect files that were already downloaded before the setting was changed. Only downloads performed after the setting takes effect SHALL use the newly selected format.
 
 #### Scenario: Existing downloads remain unchanged after setting change
 
-- **WHEN** the audio container format setting is changed after audio files have already been downloaded in the previous format
+- **WHEN** a subscription's audio container format setting is changed after audio files have already been downloaded in the previous format
 - **THEN** previously downloaded files are left untouched and are not converted or renamed
 
 ### Requirement: Library Recognition of Supported Audio Formats
