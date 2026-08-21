@@ -248,6 +248,96 @@ namespace Jellyfin.Plugin.MediathekViewDL.Tests
         }
 
         [Fact]
+        public void GenerateDownloadPaths_ShouldReturnMka_WhenGerman_AndAudioOnlyForPrimaryLanguageEnabled()
+        {
+            // Arrange
+            var config = new PluginConfiguration();
+            config.Paths.DefaultDownloadPath = "/tmp/downloads";
+            _configProviderMock.Setup(x => x.ConfigurationOrNull).Returns(config);
+            var service = new FileNameBuilderService(_loggerMock.Object, _configProviderMock.Object, _libraryManagerMock.Object);
+
+            var videoInfo = new VideoInfo { Title = "GermanShow", Language = "deu" };
+            var subscription = new Subscription
+            {
+                Name = "TestSub",
+                Download = new DownloadSettings { DownloadAudioOnlyForPrimaryLanguage = true }
+            };
+
+            // Act
+            var paths = service.GenerateDownloadPaths(videoInfo, subscription, DownloadContext.Subscription);
+
+            // Assert
+            // Non-Video output types always carry the language suffix (BuildFileName:158), even for German.
+            Assert.EndsWith("GermanShow.deu.mka", paths.MainFilePath);
+        }
+
+        [Fact]
+        public void GenerateDownloadPaths_ShouldReturnMkv_WhenGerman_AndAudioOnlyForPrimaryLanguageDisabled()
+        {
+            // Arrange
+            var config = new PluginConfiguration();
+            config.Paths.DefaultDownloadPath = "/tmp/downloads";
+            _configProviderMock.Setup(x => x.ConfigurationOrNull).Returns(config);
+            var service = new FileNameBuilderService(_loggerMock.Object, _configProviderMock.Object, _libraryManagerMock.Object);
+
+            var videoInfo = new VideoInfo { Title = "GermanShow", Language = "deu" };
+            var subscription = new Subscription { Name = "TestSub" };
+
+            // Act
+            var paths = service.GenerateDownloadPaths(videoInfo, subscription, DownloadContext.Subscription);
+
+            // Assert
+            Assert.EndsWith("GermanShow.mkv", paths.MainFilePath);
+        }
+
+        [Fact]
+        public void GenerateDownloadPaths_ShouldReturnMka_WhenGerman_WithAudiodescription_RegardlessOfFlag()
+        {
+            // Arrange
+            var config = new PluginConfiguration();
+            config.Paths.DefaultDownloadPath = "/tmp/downloads";
+            _configProviderMock.Setup(x => x.ConfigurationOrNull).Returns(config);
+            var service = new FileNameBuilderService(_loggerMock.Object, _configProviderMock.Object, _libraryManagerMock.Object);
+
+            var videoInfo = new VideoInfo { Title = "GermanShow", Language = "deu", HasAudiodescription = true };
+            var subscription = new Subscription
+            {
+                Name = "TestSub",
+                Download = new DownloadSettings { DownloadAudioOnlyForPrimaryLanguage = true }
+            };
+
+            // Act
+            var paths = service.GenerateDownloadPaths(videoInfo, subscription, DownloadContext.Subscription);
+
+            // Assert
+            // Audiodescription content already downloads as audio-only today, unrelated to the new flag.
+            Assert.EndsWith(".mka", paths.MainFilePath);
+        }
+
+        [Fact]
+        public void GenerateDownloadPaths_ShouldReturnMkv_WhenSignLanguage_EvenWithAudioOnlyForPrimaryLanguageEnabled()
+        {
+            // Arrange
+            var config = new PluginConfiguration();
+            config.Paths.DefaultDownloadPath = "/tmp/downloads";
+            _configProviderMock.Setup(x => x.ConfigurationOrNull).Returns(config);
+            var service = new FileNameBuilderService(_loggerMock.Object, _configProviderMock.Object, _libraryManagerMock.Object);
+
+            var videoInfo = new VideoInfo { Title = "GermanShow", Language = "deu", HasSignLanguage = true };
+            var subscription = new Subscription
+            {
+                Name = "TestSub",
+                Download = new DownloadSettings { DownloadAudioOnlyForPrimaryLanguage = true }
+            };
+
+            // Act
+            var paths = service.GenerateDownloadPaths(videoInfo, subscription, DownloadContext.Subscription);
+
+            // Assert
+            Assert.EndsWith(".mkv", paths.MainFilePath);
+        }
+
+        [Fact]
         public void GenerateDownloadPaths_ShouldUseSpecificDefaultPaths_WhenConfigured()
         {
             // Arrange
