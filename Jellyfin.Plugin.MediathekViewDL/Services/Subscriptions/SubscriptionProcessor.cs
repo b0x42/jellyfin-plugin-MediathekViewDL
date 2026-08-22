@@ -210,6 +210,15 @@ public class SubscriptionProcessor : ISubscriptionProcessor
                 AudioContainerFormat = subscription.Download.AudioContainerFormat,
             };
 
+            if (paths.MainType == FileType.Audio && !string.IsNullOrWhiteSpace(item.WebsiteUrl))
+            {
+                downloadJob.ArtworkMetadata = new EpisodeArtworkDTO
+                {
+                    FilePath = paths.ArtworkFilePath,
+                    WebsiteUrl = item.WebsiteUrl,
+                };
+            }
+
             // Video/Main Item
             switch (paths.MainType)
             {

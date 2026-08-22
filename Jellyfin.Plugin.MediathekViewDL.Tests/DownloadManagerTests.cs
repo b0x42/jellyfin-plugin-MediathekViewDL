@@ -19,6 +19,7 @@ public class DownloadManagerTests
 {
     private readonly Mock<ILogger<DownloadManager>> _loggerMock;
     private readonly Mock<INfoService> _nfoServiceMock;
+    private readonly Mock<IEpisodeArtworkService> _episodeArtworkServiceMock;
     private readonly Mock<IFileDownloader> _fileDownloaderMock;
     private readonly Mock<IStrmValidationService> _validationServiceMock;
     private readonly DownloadManager _downloadManager;
@@ -27,6 +28,7 @@ public class DownloadManagerTests
     {
         _loggerMock = new Mock<ILogger<DownloadManager>>();
         _nfoServiceMock = new Mock<INfoService>();
+        _episodeArtworkServiceMock = new Mock<IEpisodeArtworkService>();
         _fileDownloaderMock = new Mock<IFileDownloader>();
         _validationServiceMock = new Mock<IStrmValidationService>();
 
@@ -42,6 +44,7 @@ public class DownloadManagerTests
         _downloadManager = new DownloadManager(
             _loggerMock.Object,
             _nfoServiceMock.Object,
+            _episodeArtworkServiceMock.Object,
             new[] { handler.Object },
             _validationServiceMock.Object);
     }
@@ -162,5 +165,80 @@ public class DownloadManagerTests
         {
             File.Delete(destPath);
         }
+    }
+
+    [Fact]
+    public async Task ExecuteJobAsync_ArtworkMetadataSet_DownloadsArtwork()
+    {
+        // Arrange
+        var destPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.tmp");
+        var artworkPath = Path.Combine(Path.GetTempPath(), $"artwork_{Guid.NewGuid():N}.jpg");
+        var job = CreateJob("https://ard.de/video.mp4", destPath);
+        job.ArtworkMetadata = new EpisodeArtworkDTO { FilePath = artworkPath, WebsiteUrl = "https://ard.de/episode-100" };
+
+        _validationServiceMock
+            .Setup(s => s.ValidateUrlAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _downloadManager.ExecuteJobAsync(job, Mock.Of<IProgress<double>>(), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.Success);
+        _episodeArtworkServiceMock.Verify(
+            s => s.DownloadArtworkAsync(job.ArtworkMetadata, It.IsAny<CancellationToken>()),
+            Times.Once());
+    }
+
+    [Fact]
+    public async Task ExecuteJobAsync_ArtworkFileAlreadyExists_SkipsArtworkDownload()
+    {
+        // Arrange
+        var destPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.tmp");
+        var artworkPath = Path.Combine(Path.GetTempPath(), $"artwork_{Guid.NewGuid():N}.jpg");
+        File.WriteAllBytes(artworkPath, new byte[] { 1, 2, 3 });
+        try
+        {
+            var job = CreateJob("https://ard.de/video.mp4", destPath);
+            job.ArtworkMetadata = new EpisodeArtworkDTO { FilePath = artworkPath, WebsiteUrl = "https://ard.de/episode-100" };
+
+            _validationServiceMock
+                .Setup(s => s.ValidateUrlAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _downloadManager.ExecuteJobAsync(job, Mock.Of<IProgress<double>>(), CancellationToken.None);
+
+            // Assert
+            Assert.True(result.Success);
+            _episodeArtworkServiceMock.Verify(
+                s => s.DownloadArtworkAsync(It.IsAny<EpisodeArtworkDTO>(), It.IsAny<CancellationToken>()),
+                Times.Never());
+        }
+        finally
+        {
+            File.Delete(artworkPath);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteJobAsync_NoArtworkMetadata_DoesNotCallArtworkService()
+    {
+        // Arrange
+        var destPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.tmp");
+        var job = CreateJob("https://ard.de/video.mp4", destPath);
+
+        _validationServiceMock
+            .Setup(s => s.ValidateUrlAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _downloadManager.ExecuteJobAsync(job, Mock.Of<IProgress<double>>(), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.Success);
+        _episodeArtworkServiceMock.Verify(
+            s => s.DownloadArtworkAsync(It.IsAny<EpisodeArtworkDTO>(), It.IsAny<CancellationToken>()),
+            Times.Never());
     }
 }

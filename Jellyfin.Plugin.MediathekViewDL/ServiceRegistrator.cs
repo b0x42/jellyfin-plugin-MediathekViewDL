@@ -37,6 +37,9 @@ namespace Jellyfin.Plugin.MediathekViewDL
             // Register the typed client for API
             serviceCollection.AddHttpClient<IMediathekViewApiClient, MediathekViewApiClient>();
 
+            // Register the typed client for episode artwork fetching
+            serviceCollection.AddHttpClient<IEpisodeArtworkService, EpisodeArtworkService>();
+
             // Database
             serviceCollection.AddDbContext<MediathekViewDlDbContext>(options =>
             {

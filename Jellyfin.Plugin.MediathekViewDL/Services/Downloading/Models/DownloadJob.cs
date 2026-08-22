@@ -39,6 +39,12 @@ public class DownloadJob
     public NfoDTO? NfoMetadata { get; set; }
 
     /// <summary>
+    /// Gets or sets the episode artwork to be downloaded for this item, if applicable.
+    /// Only set for audio-only extractions, since those files carry no artwork of their own.
+    /// </summary>
+    public EpisodeArtworkDTO? ArtworkMetadata { get; set; }
+
+    /// <summary>
     /// Gets or sets the media metadata that should be embedded into the resulting
     /// media files (matroska container via ffmpeg / .strm comment).
     /// </summary>
