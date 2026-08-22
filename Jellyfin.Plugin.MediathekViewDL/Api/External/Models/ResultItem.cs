@@ -80,6 +80,13 @@ public class ResultItem
     /// </summary>
     [JsonPropertyName("url_subtitle")]
     public string UrlSubtitle { get; set; }
+
+    /// <summary>
+    /// Gets or sets the URL of the broadcaster's website page for this item (e.g. the ZDF/ARD
+    /// episode page). Used, among other things, to look up the episode's teaser image.
+    /// </summary>
+    [JsonPropertyName("url_website")]
+    public string UrlWebsite { get; set; }
 }
 
 #nullable enable

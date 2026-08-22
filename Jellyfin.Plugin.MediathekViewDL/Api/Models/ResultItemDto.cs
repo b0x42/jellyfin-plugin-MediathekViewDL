@@ -66,6 +66,11 @@ public record ResultItemDto
     public required IReadOnlyList<ExternalId> ExternalIds { get; init; }
 
     /// <summary>
+    /// Gets the URL of the broadcaster's website page for this item, if any.
+    /// </summary>
+    public string? WebsiteUrl { get; init; }
+
+    /// <summary>
     /// Retrieves the preferred subtitle URL based on type priority.
     /// </summary>
     /// <returns>The Subtitle.</returns>

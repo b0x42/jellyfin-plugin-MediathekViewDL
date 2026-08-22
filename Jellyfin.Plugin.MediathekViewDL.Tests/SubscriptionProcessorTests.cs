@@ -117,6 +117,93 @@ namespace Jellyfin.Plugin.MediathekViewDL.Tests
         }
 
         [Fact]
+        public async Task GetJobsForSubscriptionAsync_ShouldNotIncludeWebsiteUrl_ForVideoDownload()
+        {
+            // Arrange
+            var subscription = new Subscription { Name = "TestSub" };
+            var item = new ResultItem
+            {
+                Id = "123",
+                Title = "TestTitle",
+                UrlVideo = "http://test.com/video.mp4",
+                UrlWebsite = "https://www.zdf.de/video/talk/example-100"
+            };
+
+            var resultChannels = new ResultChannels
+            {
+                Results = new Collection<ResultItem> { item },
+                QueryInfo = new QueryInfo { TotalResults = 1 }
+            };
+
+            _apiClientMock
+                .Setup(x => x.SearchAsync(It.IsAny<ApiQueryDto>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(resultChannels.ToDto(new ApiQueryDto(), false));
+
+            var videoInfo = new VideoInfo { Title = "TestTitle", Language = "deu" };
+            _videoParserMock
+                .Setup(x => x.ParseVideoInfo(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(videoInfo);
+
+            // MainType defaults to FileType.Video -- a regular video download.
+            _fileNameBuilderServiceMock
+                .Setup(x => x.GenerateDownloadPaths(It.IsAny<VideoInfo>(), It.IsAny<Subscription>(), It.IsAny<DownloadContext>(), It.IsAny<FileType?>()))
+                .Returns(new DownloadPaths { DirectoryPath = "/tmp", MainFilePath = "/tmp/video.mkv", MainType = FileType.Video });
+
+            // Act
+            var jobs = await _processor.GetJobsForSubscriptionAsync(subscription, false, CancellationToken.None);
+
+            // Assert
+            Assert.Single(jobs);
+            Assert.Null(jobs[0].MediaMetadata.WebsiteUrl);
+        }
+
+        [Fact]
+        public async Task GetJobsForSubscriptionAsync_ShouldIncludeWebsiteUrl_ForAudioOnlyExtraction()
+        {
+            // Arrange
+            var subscription = new Subscription
+            {
+                Name = "TestSub",
+                Download = new DownloadSettings { DownloadAudioOnlyForPrimaryLanguage = true }
+            };
+            var item = new ResultItem
+            {
+                Id = "123",
+                Title = "TestTitle",
+                UrlVideo = "http://test.com/video.mp4",
+                UrlWebsite = "https://www.zdf.de/video/talk/example-100"
+            };
+
+            var resultChannels = new ResultChannels
+            {
+                Results = new Collection<ResultItem> { item },
+                QueryInfo = new QueryInfo { TotalResults = 1 }
+            };
+
+            _apiClientMock
+                .Setup(x => x.SearchAsync(It.IsAny<ApiQueryDto>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(resultChannels.ToDto(new ApiQueryDto(), false));
+
+            var videoInfo = new VideoInfo { Title = "TestTitle", Language = "deu" };
+            _videoParserMock
+                .Setup(x => x.ParseVideoInfo(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(videoInfo);
+
+            // MainType is FileType.Audio, as FileNameBuilderService would return when
+            // DownloadAudioOnlyForPrimaryLanguage causes an audio-only extraction.
+            _fileNameBuilderServiceMock
+                .Setup(x => x.GenerateDownloadPaths(It.IsAny<VideoInfo>(), It.IsAny<Subscription>(), It.IsAny<DownloadContext>(), It.IsAny<FileType?>()))
+                .Returns(new DownloadPaths { DirectoryPath = "/tmp", MainFilePath = "/tmp/audio.m4a", MainType = FileType.Audio });
+
+            // Act
+            var jobs = await _processor.GetJobsForSubscriptionAsync(subscription, false, CancellationToken.None);
+
+            // Assert
+            Assert.Single(jobs);
+            Assert.Equal("https://www.zdf.de/video/talk/example-100", jobs[0].MediaMetadata.WebsiteUrl);
+        }
+
+        [Fact]
         public async Task GetJobsForSubscriptionAsync_ShouldSkip_IfFoundLocally_AndEnhancedDetectionEnabled()
         {
             // Arrange

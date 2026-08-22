@@ -144,6 +144,10 @@ public static class DtoConverter
 
         var subtitleUrls = ExtractSubtitleUrls(resultItem.UrlSubtitle);
 
+        var websiteUrl = string.IsNullOrEmpty(resultItem.UrlWebsite)
+            ? null
+            : (upgradeToHttps ? UrlHttpsUpgrade(resultItem.UrlWebsite) : resultItem.UrlWebsite);
+
         return new ResultItemDto
         {
             Id = resultItem.Id,
@@ -156,7 +160,8 @@ public static class DtoConverter
             Size = resultItem.Size,
             VideoUrls = videoUrls,
             SubtitleUrls = subtitleUrls,
-            ExternalIds = new List<ExternalId>() // Populate if available, currently not provided by API (ZDF has IMDb, but it's not contained in MediathekViewApi)
+            ExternalIds = new List<ExternalId>(), // Populate if available, currently not provided by API (ZDF has IMDb, but it's not contained in MediathekViewApi)
+            WebsiteUrl = websiteUrl
         };
     }
 
