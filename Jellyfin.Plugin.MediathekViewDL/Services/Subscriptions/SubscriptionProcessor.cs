@@ -199,6 +199,7 @@ public class SubscriptionProcessor : ISubscriptionProcessor
 
             // Subtitle URL for media metadata (only the preferred one).
             string? preferredSubtitleUrl = downloadSubtitles ? item.GetSubtitle()?.Url : null;
+            var isAudioOnlyExtraction = paths.MainType == FileType.Audio;
 
             // Download Task
             var downloadJob = new DownloadJob
@@ -206,11 +207,11 @@ public class SubscriptionProcessor : ISubscriptionProcessor
                 ItemId = item.Id,
                 Title = tempVideoInfo.Title,
                 ItemInfo = tempVideoInfo,
-                MediaMetadata = MediaMetadataFactory.Create(item, videoUrl, preferredSubtitleUrl, tempVideoInfo, includeWebsiteUrl: paths.MainType == FileType.Audio),
+                MediaMetadata = MediaMetadataFactory.Create(item, videoUrl, preferredSubtitleUrl, tempVideoInfo, includeWebsiteUrl: isAudioOnlyExtraction),
                 AudioContainerFormat = subscription.Download.AudioContainerFormat,
             };
 
-            if (paths.MainType == FileType.Audio && !string.IsNullOrWhiteSpace(item.WebsiteUrl))
+            if (isAudioOnlyExtraction && !string.IsNullOrWhiteSpace(item.WebsiteUrl))
             {
                 downloadJob.ArtworkMetadata = new EpisodeArtworkDTO
                 {

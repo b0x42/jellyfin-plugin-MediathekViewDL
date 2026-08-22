@@ -154,6 +154,8 @@ public class DownloadManager : IDownloadManager
             }
         }
 
+        bool? artworkDownloaded = null;
+
         if (overallSuccess)
         {
             progress.Report(100);
@@ -163,16 +165,21 @@ public class DownloadManager : IDownloadManager
                 _nfoService.CreateNfo(job.NfoMetadata);
             }
 
-            if (job.ArtworkMetadata is not null && !File.Exists(job.ArtworkMetadata.FilePath))
+            if (job.ArtworkMetadata is not null)
             {
-                await _episodeArtworkService.DownloadArtworkAsync(job.ArtworkMetadata, cancellationToken).ConfigureAwait(false);
+                // Best-effort by design: the return value only feeds DownloadJobResult's
+                // informational ArtworkDownloaded flag and is never allowed to affect
+                // overallSuccess, so a failed artwork fetch never fails the overall job.
+                artworkDownloaded = File.Exists(job.ArtworkMetadata.FilePath)
+                    || await _episodeArtworkService.DownloadArtworkAsync(job.ArtworkMetadata, cancellationToken).ConfigureAwait(false);
             }
         }
 
         return new DownloadJobResult
         {
             Success = overallSuccess,
-            ItemResults = itemResults
+            ItemResults = itemResults,
+            ArtworkDownloaded = artworkDownloaded
         };
     }
 }

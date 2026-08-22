@@ -186,10 +186,62 @@ public class EpisodeArtworkServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task DownloadArtworkAsync_DisallowedWebsiteDomain_StaysDisallowedEvenWithAllowUnknownDomains()
+    {
+        // Arrange -- AllowUnknownDomains relaxes FileDownloader/StrmValidationService's
+        // single-hop direct download checks, but must NOT relax this service's two-hop
+        // fetch-then-follow-a-scraped-URL flow: an attacker-influenced page could otherwise
+        // direct a second request anywhere.
+        _configProviderMock.Setup(x => x.ConfigurationOrNull).Returns(new PluginConfiguration
+        {
+            Network = new Configuration.Groups.NetworkOptions { AllowUnknownDomains = true }
+        });
+        var artworkPath = Path.Combine(_tempDir, "episode.jpg");
+        var item = new EpisodeArtworkDTO { FilePath = artworkPath, WebsiteUrl = "https://malicious-site.com/episode-100" };
+
+        // Act
+        var result = await _service.DownloadArtworkAsync(item, CancellationToken.None);
+
+        // Assert
+        Assert.False(result);
+        _httpMessageHandlerMock.Protected().Verify(
+            "SendAsync",
+            Times.Never(),
+            ItExpr.IsAny<HttpRequestMessage>(),
+            ItExpr.IsAny<CancellationToken>());
+    }
+
+    [Fact]
     public async Task DownloadArtworkAsync_DisallowedImageDomain_ReturnsFalse()
     {
         // Arrange -- the page itself is on an allowed domain, but its og:image points
         // somewhere disallowed.
+        var html = "<html><head><meta property=\"og:image\" content=\"https://malicious-cdn.com/x.jpg\" /></head></html>";
+        _httpMessageHandlerMock.Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.Is<HttpRequestMessage>(r => r.RequestUri == new Uri(WebsiteUrl)),
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(html) });
+        var artworkPath = Path.Combine(_tempDir, "episode.jpg");
+        var item = new EpisodeArtworkDTO { FilePath = artworkPath, WebsiteUrl = WebsiteUrl };
+
+        // Act
+        var result = await _service.DownloadArtworkAsync(item, CancellationToken.None);
+
+        // Assert
+        Assert.False(result);
+        Assert.False(File.Exists(artworkPath));
+    }
+
+    [Fact]
+    public async Task DownloadArtworkAsync_DisallowedImageDomain_StaysDisallowedEvenWithAllowUnknownDomains()
+    {
+        // Arrange -- same regression guard as the website-domain case, for the second hop.
+        _configProviderMock.Setup(x => x.ConfigurationOrNull).Returns(new PluginConfiguration
+        {
+            Network = new Configuration.Groups.NetworkOptions { AllowUnknownDomains = true }
+        });
         var html = "<html><head><meta property=\"og:image\" content=\"https://malicious-cdn.com/x.jpg\" /></head></html>";
         _httpMessageHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(

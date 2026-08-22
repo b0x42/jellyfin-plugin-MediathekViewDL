@@ -179,19 +179,48 @@ public class DownloadManagerTests
         _validationServiceMock
             .Setup(s => s.ValidateUrlAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
+        _episodeArtworkServiceMock
+            .Setup(s => s.DownloadArtworkAsync(job.ArtworkMetadata, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         // Act
         var result = await _downloadManager.ExecuteJobAsync(job, Mock.Of<IProgress<double>>(), CancellationToken.None);
 
         // Assert
         Assert.True(result.Success);
+        Assert.True(result.ArtworkDownloaded);
         _episodeArtworkServiceMock.Verify(
             s => s.DownloadArtworkAsync(job.ArtworkMetadata, It.IsAny<CancellationToken>()),
             Times.Once());
     }
 
     [Fact]
-    public async Task ExecuteJobAsync_ArtworkFileAlreadyExists_SkipsArtworkDownload()
+    public async Task ExecuteJobAsync_ArtworkDownloadFails_ReflectedInResultButJobStillSucceeds()
+    {
+        // Arrange -- artwork is best-effort: a failed fetch must never fail the overall job,
+        // but should still be observable via ArtworkDownloaded.
+        var destPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.tmp");
+        var artworkPath = Path.Combine(Path.GetTempPath(), $"artwork_{Guid.NewGuid():N}.jpg");
+        var job = CreateJob("https://ard.de/video.mp4", destPath);
+        job.ArtworkMetadata = new EpisodeArtworkDTO { FilePath = artworkPath, WebsiteUrl = "https://ard.de/episode-100" };
+
+        _validationServiceMock
+            .Setup(s => s.ValidateUrlAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _episodeArtworkServiceMock
+            .Setup(s => s.DownloadArtworkAsync(job.ArtworkMetadata, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        // Act
+        var result = await _downloadManager.ExecuteJobAsync(job, Mock.Of<IProgress<double>>(), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.False(result.ArtworkDownloaded);
+    }
+
+    [Fact]
+    public async Task ExecuteJobAsync_ArtworkFileAlreadyExists_SkipsArtworkDownloadButReportsTrue()
     {
         // Arrange
         var destPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.tmp");
@@ -211,6 +240,7 @@ public class DownloadManagerTests
 
             // Assert
             Assert.True(result.Success);
+            Assert.True(result.ArtworkDownloaded);
             _episodeArtworkServiceMock.Verify(
                 s => s.DownloadArtworkAsync(It.IsAny<EpisodeArtworkDTO>(), It.IsAny<CancellationToken>()),
                 Times.Never());
@@ -222,7 +252,7 @@ public class DownloadManagerTests
     }
 
     [Fact]
-    public async Task ExecuteJobAsync_NoArtworkMetadata_DoesNotCallArtworkService()
+    public async Task ExecuteJobAsync_NoArtworkMetadata_DoesNotCallArtworkServiceAndLeavesResultNull()
     {
         // Arrange
         var destPath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid():N}.tmp");
@@ -237,6 +267,7 @@ public class DownloadManagerTests
 
         // Assert
         Assert.True(result.Success);
+        Assert.Null(result.ArtworkDownloaded);
         _episodeArtworkServiceMock.Verify(
             s => s.DownloadArtworkAsync(It.IsAny<EpisodeArtworkDTO>(), It.IsAny<CancellationToken>()),
             Times.Never());

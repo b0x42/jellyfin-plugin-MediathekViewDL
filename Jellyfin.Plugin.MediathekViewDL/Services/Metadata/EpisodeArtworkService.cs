@@ -116,6 +116,13 @@ public partial class EpisodeArtworkService : IEpisodeArtworkService
 
     private bool IsDomainAllowed(string url, PluginConfiguration pluginConfig)
     {
+        // Unlike FileDownloader/StrmValidationService, this deliberately does NOT honor
+        // Network.AllowUnknownDomains. Fetching a website page and then following a second,
+        // attacker-influenced URL extracted from that page's HTML is a wider trust boundary
+        // than a single direct download URL -- AllowUnknownDomains exists to relax restrictions
+        // on video CDN domains, not to let arbitrary scraped HTML drive a second outbound
+        // request to anywhere. Both hops (the page itself and its og:image) must be on an
+        // explicitly allowed domain.
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
         {
             _logger.LogWarning("Invalid or non-HTTPS URL: {Url}", url);
@@ -130,11 +137,20 @@ public partial class EpisodeArtworkService : IEpisodeArtworkService
         }
 
         var topDomain = string.Join('.', hostParts[^2..]);
-        return pluginConfig.AllowedDomains.Contains(topDomain) || pluginConfig.Network.AllowUnknownDomains;
+        return pluginConfig.AllowedDomains.Contains(topDomain);
     }
 
     // Matches <meta property="og:image" content="..."> regardless of attribute order
     // (property before content, or content before property) and quote style.
+    //
+    // This is a best-effort regex match, not a real HTML parser, scoped to the small set
+    // of broadcaster domains this plugin already trusts (AllowedDomains) rather than
+    // arbitrary pages. It correctly requires an exact quoted "og:image" match, so longer
+    // property names like "og:image:secure_url" do not false-match. Known limitation: it
+    // won't match if og:image and content are separated by another attribute containing a
+    // literal '>' inside a quoted value (rare in practice). If broadcaster markup ever
+    // needs more robust handling than this, switch to a proper HTML parser (e.g.
+    // AngleSharp) instead of extending this pattern further.
     [GeneratedRegex(
         "<meta[^>]*(?:property=[\"']og:image[\"'][^>]*content=[\"']([^\"']+)[\"']|content=[\"']([^\"']+)[\"'][^>]*property=[\"']og:image[\"'])",
         RegexOptions.IgnoreCase)]
