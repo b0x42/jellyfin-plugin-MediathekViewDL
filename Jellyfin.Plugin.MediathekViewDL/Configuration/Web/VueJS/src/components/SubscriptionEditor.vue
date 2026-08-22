@@ -245,12 +245,14 @@ function updateDate(target, field, value) {
                         </label>
                         <p class="field-desc">Verwendet Streaming-URL-Dateien (.strm) anstelle des Herunterladens der tatsächlichen Videodateien. Es werden keine Videodateien gespeichert, die Videos werden von ARD/ZDF direkt gestreamt. Untertitel sind hiervon nicht betroffen.</p>
                     </div>
-                    <div v-if="!editedSub.Download.UseStreamingUrlFiles" class="sub-options">
-                        <div class="checkbox-field">
-                            <label>
-                                <input v-model="editedSub.Download.DownloadFullVideoForSecondaryAudio" type="checkbox"> Vollständiges Video für sekundäre Audiosprachen herunterladen
-                            </label>
-                            <p class="field-desc">Wenn aktiviert, wird das vollständige Video heruntergeladen, auch wenn es eine andere Audiosprache als Deutsch enthält. Andernfalls wird nur die Audiospur dieser Sprache extrahiert.</p>
+                    <template v-if="!editedSub.Download.UseStreamingUrlFiles">
+                        <div class="sub-options">
+                            <div class="checkbox-field">
+                                <label>
+                                    <input v-model="editedSub.Download.DownloadFullVideoForSecondaryAudio" type="checkbox"> Vollständiges Video für sekundäre Audiosprachen herunterladen
+                                </label>
+                                <p class="field-desc">Wenn aktiviert, wird das vollständige Video heruntergeladen, auch wenn es eine andere Audiosprache als Deutsch enthält. Andernfalls wird nur die Audiospur dieser Sprache extrahiert.</p>
+                            </div>
                         </div>
                         <div class="checkbox-field">
                             <label>
@@ -258,15 +260,17 @@ function updateDate(target, field, value) {
                             </label>
                             <p class="field-desc">Wenn aktiviert, wird für deutschsprachige Inhalte nur die Audiospur heruntergeladen statt des vollständigen Videos. Gilt nicht für Inhalte mit Gebärdensprache (immer Video) oder Audiodeskription (bereits immer Audio-only).</p>
                         </div>
-                        <div class="field">
-                            <label>Container-Format für reine Audio-Downloads</label>
-                            <select v-model="editedSub.Download.AudioContainerFormat" class="field-input">
-                                <option value="M4a">.m4a (empfohlen für Podcast-/Audio-Apps)</option>
-                                <option value="Mka">.mka (Matroska, primär für Jellyfin selbst)</option>
-                            </select>
-                            <p class="field-desc">Gilt nur, wenn für diesen Titel eine reine Audiospur extrahiert wird (z.B. sekundäre Audiosprache ohne vollständiges Video, deutsche Sprache mit aktivierter Option "Nur Audio", oder Audiodeskription). .m4a wird von externen Podcast- und Audio-Apps deutlich besser unterstützt als .mka, welches primär innerhalb von Jellyfin funktioniert. Die Audiospur wird in beiden Fällen ohne erneutes Kodieren übernommen (kein Qualitätsverlust). Bereits heruntergeladene Dateien werden bei einer Änderung nicht konvertiert.</p>
+                        <div v-if="editedSub.Download.DownloadAudioOnlyForPrimaryLanguage || editedSub.Accessibility.AllowAudioDescription" class="sub-options">
+                            <div class="field">
+                                <label>Container-Format für reine Audio-Downloads</label>
+                                <select v-model="editedSub.Download.AudioContainerFormat" class="field-input">
+                                    <option value="M4a">.m4a (empfohlen für Podcast-/Audio-Apps)</option>
+                                    <option value="Mka">.mka (Matroska, primär für Jellyfin selbst)</option>
+                                </select>
+                                <p class="field-desc">Gilt nur, wenn für diesen Titel eine reine Audiospur extrahiert wird (z.B. sekundäre Audiosprache ohne vollständiges Video, deutsche Sprache mit aktivierter Option "Nur Audio", oder Audiodeskription). .m4a wird von externen Podcast- und Audio-Apps deutlich besser unterstützt als .mka, welches primär innerhalb von Jellyfin funktioniert. Die Audiospur wird in beiden Fällen ohne erneutes Kodieren übernommen (kein Qualitätsverlust). Bereits heruntergeladene Dateien werden bei einer Änderung nicht konvertiert.</p>
+                            </div>
                         </div>
-                    </div>
+                    </template>
                     <div class="checkbox-field">
                         <label>
                             <input v-model="editedSub.Download.AlwaysCreateSubfolder" type="checkbox"> Unterordner für dieses Abo erstellen
