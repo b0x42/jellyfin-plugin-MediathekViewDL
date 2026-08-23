@@ -52,9 +52,9 @@ public class DownloadJob
 
     /// <summary>
     /// Gets or sets the output container format to use if this job includes an
-    /// <see cref="DownloadType.AudioExtraction"/> item. Defaults to <see cref="AudioContainerFormat.M4a"/>,
+    /// <see cref="DownloadType.AudioExtraction"/> item. Defaults to <see cref="AudioContainerFormat.Mka"/>,
     /// matching the default on <see cref="Configuration.SubscriptionSettings.BaseDownloadSettings"/>.
     /// Not consulted for jobs that do not perform audio extraction.
     /// </summary>
-    public AudioContainerFormat AudioContainerFormat { get; set; } = AudioContainerFormat.M4a;
+    public AudioContainerFormat AudioContainerFormat { get; set; } = AudioContainerFormat.Mka;
 }
