@@ -19,6 +19,7 @@ public class DownloadManager : IDownloadManager
 {
     private readonly ILogger<DownloadManager> _logger;
     private readonly INfoService _nfoService;
+    private readonly IEpisodeArtworkService _episodeArtworkService;
     private readonly IEnumerable<IDownloadHandler> _downloadHandlers;
     private readonly IStrmValidationService _urlValidationService;
 
@@ -27,16 +28,19 @@ public class DownloadManager : IDownloadManager
     /// </summary>
     /// <param name="logger">The logger.</param>
     /// <param name="nfoService">The NFO service.</param>
+    /// <param name="episodeArtworkService">The episode artwork service.</param>
     /// <param name="downloadHandlers">The download handlers.</param>
     /// <param name="urlValidationService">The URL validation service.</param>
     public DownloadManager(
         ILogger<DownloadManager> logger,
         INfoService nfoService,
+        IEpisodeArtworkService episodeArtworkService,
         IEnumerable<IDownloadHandler> downloadHandlers,
         IStrmValidationService urlValidationService)
     {
         _logger = logger;
         _nfoService = nfoService;
+        _episodeArtworkService = episodeArtworkService;
         _downloadHandlers = downloadHandlers;
         _urlValidationService = urlValidationService;
     }
@@ -150,6 +154,8 @@ public class DownloadManager : IDownloadManager
             }
         }
 
+        bool? artworkDownloaded = null;
+
         if (overallSuccess)
         {
             progress.Report(100);
@@ -158,12 +164,22 @@ public class DownloadManager : IDownloadManager
             {
                 _nfoService.CreateNfo(job.NfoMetadata);
             }
+
+            if (job.ArtworkMetadata is not null)
+            {
+                // Best-effort by design: the return value only feeds DownloadJobResult's
+                // informational ArtworkDownloaded flag and is never allowed to affect
+                // overallSuccess, so a failed artwork fetch never fails the overall job.
+                artworkDownloaded = File.Exists(job.ArtworkMetadata.FilePath)
+                    || await _episodeArtworkService.DownloadArtworkAsync(job.ArtworkMetadata, cancellationToken).ConfigureAwait(false);
+            }
         }
 
         return new DownloadJobResult
         {
             Success = overallSuccess,
-            ItemResults = itemResults
+            ItemResults = itemResults,
+            ArtworkDownloaded = artworkDownloaded
         };
     }
 }

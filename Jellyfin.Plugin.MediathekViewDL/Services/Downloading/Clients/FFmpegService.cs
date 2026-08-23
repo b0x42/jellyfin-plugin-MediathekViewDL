@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.MediathekViewDL.Configuration.SubscriptionSettings;
 using Jellyfin.Plugin.MediathekViewDL.Services.Library;
 using Jellyfin.Plugin.MediathekViewDL.Services.Metadata;
 using MediaBrowser.Controller.MediaEncoding;
@@ -43,25 +44,7 @@ public class FFmpegService : IFFmpegService
     }
 
     /// <inheritdoc />
-    public async Task<bool> ExtractAudioAsync(string tempVideoPath, string outputAudioPath, string languageCode, IProgress<double> progress, CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Extracting audio from '{Input}' to '{Output}' with language '{Lang}'", tempVideoPath, outputAudioPath, languageCode);
-        if (string.IsNullOrWhiteSpace(_mediaEncoder.EncoderPath))
-        {
-            _logger.LogError("FFmpeg encoder path is not configured.");
-            return false;
-        }
-
-        // Build ffmpeg arguments
-        string[] args = ["-i", tempVideoPath, "-vn", "-acodec", "copy", "-metadata:s:a:0", $"language={languageCode}", "-f", "matroska", "-y", outputAudioPath];
-        // Execute ffmpeg
-        var res = await ExecuteFFmpegAsync(args, cancellationToken, false, progress).ConfigureAwait(false);
-
-        return res.ExitCode == 0;
-    }
-
-    /// <inheritdoc />
-    public async Task<bool> ExtractAudioFromWebAsync(string videoUrl, string outputAudioPath, string languageCode, bool setOriginalLanguageTag, bool isAudioDescription, IProgress<double> progress, CancellationToken cancellationToken)
+    public async Task<bool> ExtractAudioFromWebAsync(string videoUrl, string outputAudioPath, string languageCode, bool setOriginalLanguageTag, bool isAudioDescription, AudioContainerFormat containerFormat, IProgress<double> progress, CancellationToken cancellationToken, Metadata.MediaMetadata? metadata = null)
     {
         try
         {
@@ -77,7 +60,7 @@ public class FFmpegService : IFFmpegService
             return false;
         }
 
-        _logger.LogInformation("Extracting audio from '{Input}' to '{Output}' with language '{Lang}'", videoUrl, outputAudioPath, languageCode);
+        _logger.LogInformation("Extracting audio from '{Input}' to '{Output}' with language '{Lang}' as '{Format}'", videoUrl, outputAudioPath, languageCode, containerFormat);
 
         // Build ffmpeg arguments
         var args = new List<string>
@@ -109,8 +92,24 @@ public class FFmpegService : IFFmpegService
             args.Add(string.Join("+", dispositions));
         }
 
+        string muxer = containerFormat == AudioContainerFormat.M4a ? "mp4" : "matroska";
+
+        if (metadata is not null)
+        {
+            if (containerFormat == AudioContainerFormat.M4a)
+            {
+                // MP4/M4A only persists freeform metadata tags when explicitly requested.
+                args.Add("-movflags");
+                args.Add("+use_metadata_tags");
+            }
+
+            var metadataJson = MediaMetadataKeys.Serialize(metadata);
+            args.Add("-metadata");
+            args.Add($"{MediaMetadataKeys.MetadataKey}={metadataJson}");
+        }
+
         args.Add("-f");
-        args.Add("matroska");
+        args.Add(muxer);
         args.Add("-y"); // Force overwrite Temp Path.
         args.Add(outputAudioPath);
 

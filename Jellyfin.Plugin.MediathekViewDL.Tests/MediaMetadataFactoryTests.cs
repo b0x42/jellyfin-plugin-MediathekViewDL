@@ -162,4 +162,48 @@ public class MediaMetadataFactoryTests
         // Assert
         Assert.Equal("Original Topic", metadata.OriginalTopic);
     }
+
+    [Fact]
+    public void Create_ShouldOmitWebsiteUrl_ByDefault()
+    {
+        // Arrange
+        var item = BuildItem() with { WebsiteUrl = "https://www.zdf.de/video/talk/example-100" };
+        const string downloadUrl = "https://example.com/video-1080.mp4";
+
+        // Act — includeWebsiteUrl defaults to false, e.g. for video downloads.
+        var metadata = MediaMetadataFactory.Create(item, downloadUrl);
+
+        // Assert
+        Assert.Null(metadata.WebsiteUrl);
+    }
+
+    [Fact]
+    public void Create_ShouldIncludeWebsiteUrl_WhenIncludeWebsiteUrlIsTrue()
+    {
+        // Arrange
+        const string websiteUrl = "https://www.zdf.de/video/talk/example-100";
+        var item = BuildItem() with { WebsiteUrl = websiteUrl };
+        const string downloadUrl = "https://example.com/video-1080.mp4";
+
+        // Act — e.g. for an audio-only extraction, where the website page can be used to
+        // look up the episode's teaser image since the audio file carries none of its own.
+        var metadata = MediaMetadataFactory.Create(item, downloadUrl, includeWebsiteUrl: true);
+
+        // Assert
+        Assert.Equal(websiteUrl, metadata.WebsiteUrl);
+    }
+
+    [Fact]
+    public void Create_ShouldNotIncludeWebsiteUrl_WhenItemHasNoneEvenIfRequested()
+    {
+        // Arrange
+        var item = BuildItem(); // WebsiteUrl left null
+        const string downloadUrl = "https://example.com/video-1080.mp4";
+
+        // Act
+        var metadata = MediaMetadataFactory.Create(item, downloadUrl, includeWebsiteUrl: true);
+
+        // Assert
+        Assert.Null(metadata.WebsiteUrl);
+    }
 }

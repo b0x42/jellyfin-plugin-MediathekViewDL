@@ -47,4 +47,13 @@ public record BaseDownloadSettings
     /// If enabled, the target directory is scanned for existing files matching the season/episode pattern.
     /// </summary>
     public bool EnhancedDuplicateDetection { get; init; }
+
+    /// <summary>
+    /// Gets the output container format used for audio-only downloads (secondary-language audio
+    /// extraction without video). Defaults to <see cref="AudioContainerFormat.M4a"/> for compatibility
+    /// with external podcast/audio player applications. The source audio is always copied without
+    /// re-encoding regardless of the selected container. Changing this setting does not affect
+    /// files that were already downloaded; it only applies to downloads performed after the change.
+    /// </summary>
+    public AudioContainerFormat AudioContainerFormat { get; init; } = AudioContainerFormat.M4a;
 }

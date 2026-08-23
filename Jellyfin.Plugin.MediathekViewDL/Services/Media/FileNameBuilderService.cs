@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Jellyfin.Plugin.MediathekViewDL.Configuration;
+using Jellyfin.Plugin.MediathekViewDL.Configuration.SubscriptionSettings;
 using Jellyfin.Plugin.MediathekViewDL.Services.Downloading.Models;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
@@ -58,6 +59,7 @@ public class FileNameBuilderService : IFileNameBuilderService
         paths.MainFilePath = Path.Combine(paths.DirectoryPath, mainFile);
         paths.SubtitleFilePath = Path.Combine(targetDirectory, BuildFileName(videoInfo, subscription, FileType.Subtitle));
         paths.NfoFilePath = Path.ChangeExtension(paths.MainFilePath, ".nfo");
+        paths.ArtworkFilePath = Path.ChangeExtension(paths.MainFilePath, ".jpg");
 
         return paths;
     }
@@ -172,7 +174,7 @@ public class FileNameBuilderService : IFileNameBuilderService
                 fileNamePart += ".mkv";
                 break;
             case FileType.Audio:
-                fileNamePart += ".mka";
+                fileNamePart += subscription.Download.AudioContainerFormat == AudioContainerFormat.M4a ? ".m4a" : ".mka";
                 break;
             default:
                 _logger.LogError("Unknown file type '{TargetType}' for File '{FileName}'.", targetType, videoInfo.Title);
@@ -289,6 +291,7 @@ public class FileNameBuilderService : IFileNameBuilderService
         bool useStrm = subscription.Download.UseStreamingUrlFiles || (subscription.Series.SaveExtrasAsStrm && subscription.Series.TreatNonEpisodesAsExtras && !videoInfo.IsShow);
         if (useStrm)
         {
+            // No ffmpeg extraction happens for .strm output, so AudioContainerFormat does not apply here.
             return FileType.Strm;
         }
 
@@ -297,6 +300,7 @@ public class FileNameBuilderService : IFileNameBuilderService
             || videoInfo.HasSignLanguage
             || subscription.Download.DownloadFullVideoForSecondaryAudio)
         {
+            // .mkv output already embeds metadata via its own -f matroska muxing; AudioContainerFormat does not apply here.
             return FileType.Video;
         }
 

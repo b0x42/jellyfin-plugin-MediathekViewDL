@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.MediathekViewDL.Configuration;
+using Jellyfin.Plugin.MediathekViewDL.Configuration.SubscriptionSettings;
 using Jellyfin.Plugin.MediathekViewDL.Services.Downloading.Clients;
 using Jellyfin.Plugin.MediathekViewDL.Services.Downloading.Helpers;
 using Jellyfin.Plugin.MediathekViewDL.Services.Downloading.Models;
@@ -51,7 +52,9 @@ public class AudioExtractionHandler : IDownloadHandler
     public async Task<bool> ExecuteAsync(DownloadItem item, DownloadJob job, IProgress<double> progress, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Extracting audio for '{Title}' to '{Path}'.", job.Title, item.DestinationPath);
-        var tempPath = TempFileHelper.GetTempFilePath(item.DestinationPath, ".mka", _configProvider, _appPaths, _logger);
+        var containerFormat = job.AudioContainerFormat;
+        var tempExtension = containerFormat == AudioContainerFormat.M4a ? ".m4a" : ".mka";
+        var tempPath = TempFileHelper.GetTempFilePath(item.DestinationPath, tempExtension, _configProvider, _appPaths, _logger);
         try
         {
             var itemInfo = job.ItemInfo;
@@ -61,8 +64,10 @@ public class AudioExtractionHandler : IDownloadHandler
                 itemInfo.Language,
                 itemInfo.Language != "deu",
                 itemInfo.HasAudiodescription,
+                containerFormat,
                 progress,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken,
+                job.MediaMetadata).ConfigureAwait(false);
 
             if (!res)
             {
