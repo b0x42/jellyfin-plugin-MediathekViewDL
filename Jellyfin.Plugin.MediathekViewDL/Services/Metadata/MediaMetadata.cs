@@ -73,4 +73,13 @@ public class MediaMetadata
     /// </summary>
     [JsonPropertyName("description")]
     public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the URL of the broadcaster's website page for this item (e.g. the ZDF/ARD
+    /// episode page), or <c>null</c> if not applicable. Only populated for audio-only
+    /// extractions, where it can be used to look up the episode's teaser image since the
+    /// audio file itself carries no artwork of its own.
+    /// </summary>
+    [JsonPropertyName("websiteUrl")]
+    public string? WebsiteUrl { get; set; }
 }

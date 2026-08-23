@@ -43,6 +43,9 @@ watch(() => props.subscription, (newVal) => {
         copy.Search = copy.Search || {}
         copy.Search.Criteria = copy.Search.Criteria || []
         copy.Download = copy.Download || {}
+        if (!copy.Download.AudioContainerFormat) {
+            copy.Download.AudioContainerFormat = 'Mka'
+        }
         copy.Series = copy.Series || {}
         copy.Metadata = copy.Metadata || {}
         copy.Accessibility = copy.Accessibility || {}
@@ -242,14 +245,32 @@ function updateDate(target, field, value) {
                         </label>
                         <p class="field-desc">Verwendet Streaming-URL-Dateien (.strm) anstelle des Herunterladens der tatsächlichen Videodateien. Es werden keine Videodateien gespeichert, die Videos werden von ARD/ZDF direkt gestreamt. Untertitel sind hiervon nicht betroffen.</p>
                     </div>
-                    <div v-if="!editedSub.Download.UseStreamingUrlFiles" class="sub-options">
+                    <template v-if="!editedSub.Download.UseStreamingUrlFiles">
+                        <div class="sub-options">
+                            <div class="checkbox-field">
+                                <label>
+                                    <input v-model="editedSub.Download.DownloadFullVideoForSecondaryAudio" type="checkbox"> Vollständiges Video für sekundäre Audiosprachen herunterladen
+                                </label>
+                                <p class="field-desc">Wenn aktiviert, wird das vollständige Video heruntergeladen, auch wenn es eine andere Audiosprache als Deutsch enthält. Andernfalls wird nur die Audiospur dieser Sprache extrahiert.</p>
+                            </div>
+                        </div>
                         <div class="checkbox-field">
                             <label>
-                                <input v-model="editedSub.Download.DownloadFullVideoForSecondaryAudio" type="checkbox"> Vollständiges Video für sekundäre Audiosprachen herunterladen
+                                <input v-model="editedSub.Download.DownloadAudioOnlyForPrimaryLanguage" type="checkbox"> Nur Audio für deutsche Sprache herunterladen
                             </label>
-                            <p class="field-desc">Wenn aktiviert, wird das vollständige Video heruntergeladen, auch wenn es eine andere Audiosprache als Deutsch enthält. Andernfalls wird nur die Audiospur dieser Sprache extrahiert.</p>
+                            <p class="field-desc">Wenn aktiviert, wird für deutschsprachige Inhalte nur die Audiospur heruntergeladen statt des vollständigen Videos. Gilt nicht für Inhalte mit Gebärdensprache (immer Video) oder Audiodeskription (bereits immer Audio-only).</p>
                         </div>
-                    </div>
+                        <div v-if="editedSub.Download.DownloadAudioOnlyForPrimaryLanguage || editedSub.Accessibility.AllowAudioDescription" class="sub-options">
+                            <div class="field">
+                                <label>Container-Format für reine Audio-Downloads</label>
+                                <select v-model="editedSub.Download.AudioContainerFormat" class="field-input">
+                                    <option value="Mka">.mka (Matroska, empfohlen für Jellyfin)</option>
+                                    <option value="M4a">.m4a (für externe Podcast-/Audio-Apps)</option>
+                                </select>
+                                <p class="field-desc">Gilt nur, wenn für diesen Titel eine reine Audiospur extrahiert wird (z.B. sekundäre Audiosprache ohne vollständiges Video, deutsche Sprache mit aktivierter Option "Nur Audio", oder Audiodeskription). .mka wird von Jellyfin selbst zuverlässig unterstützt und ist daher die Standardeinstellung; .m4a eignet sich besser, wenn die Datei primär in externen Podcast-/Audio-Apps genutzt werden soll. Die Audiospur wird in beiden Fällen ohne erneutes Kodieren übernommen (kein Qualitätsverlust). Bereits heruntergeladene Dateien werden bei einer Änderung nicht konvertiert.</p>
+                            </div>
+                        </div>
+                    </template>
                     <div class="checkbox-field">
                         <label>
                             <input v-model="editedSub.Download.AlwaysCreateSubfolder" type="checkbox"> Unterordner für dieses Abo erstellen

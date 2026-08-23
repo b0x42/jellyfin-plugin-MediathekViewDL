@@ -19,12 +19,17 @@ public static class MediaMetadataFactory
     /// <param name="subtitleUrl">The optional URL of the preferred subtitle.</param>
     /// <param name="videoInfo">The optional parsed video info that contains the season/episode
     /// numbers extracted from the title. When <c>null</c> the season/episode fields stay empty.</param>
+    /// <param name="includeWebsiteUrl">Whether <see cref="ResultItemDto.WebsiteUrl"/> should be
+    /// included. Intended to be <c>true</c> only for audio-only extractions, where the item's
+    /// website page can be used to look up episode artwork since the audio file carries none
+    /// of its own.</param>
     /// <returns>The populated <see cref="MediaMetadata"/> instance.</returns>
     public static MediaMetadata Create(
         ResultItemDto item,
         string downloadUrl,
         string? subtitleUrl = null,
-        VideoInfo? videoInfo = null)
+        VideoInfo? videoInfo = null,
+        bool includeWebsiteUrl = false)
     {
         var videoUrls = item.VideoUrls
             .Select(v => v.Url)
@@ -43,6 +48,7 @@ public static class MediaMetadataFactory
             EpisodeNumber = videoInfo?.EpisodeNumber,
             AbsoluteEpisodeNumber = videoInfo?.AbsoluteEpisodeNumber,
             Description = item.Description,
+            WebsiteUrl = includeWebsiteUrl ? item.WebsiteUrl : null,
         };
     }
 }

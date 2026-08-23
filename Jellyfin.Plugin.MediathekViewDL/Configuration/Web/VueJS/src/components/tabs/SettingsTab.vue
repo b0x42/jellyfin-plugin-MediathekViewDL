@@ -45,6 +45,8 @@ const defMaxDuration = ref('')
 // Subscription Defaults - Download
 const defUseStreamingUrlFiles = ref(false)
 const defDownloadFullVideoSecondaryAudio = ref(false)
+const defAudioContainerFormat = ref('Mka')
+const defDownloadAudioOnlyForPrimaryLanguage = ref(false)
 const defAlwaysCreateSubfolder = ref(false)
 const defEnhancedDuplicateDetection = ref(false)
 const defAllowFallbackToLowerQuality = ref(true)
@@ -133,6 +135,8 @@ async function loadConfig() {
 
     defUseStreamingUrlFiles.value = defDl.UseStreamingUrlFiles ?? false
     defDownloadFullVideoSecondaryAudio.value = defDl.DownloadFullVideoForSecondaryAudio ?? false
+    defAudioContainerFormat.value = defDl.AudioContainerFormat ?? 'Mka'
+    defDownloadAudioOnlyForPrimaryLanguage.value = defDl.DownloadAudioOnlyForPrimaryLanguage ?? false
     defAlwaysCreateSubfolder.value = defDl.AlwaysCreateSubfolder ?? false
     defEnhancedDuplicateDetection.value = defDl.EnhancedDuplicateDetection ?? false
     defAllowFallbackToLowerQuality.value = defDl.AllowFallbackToLowerQuality !== undefined ? defDl.AllowFallbackToLowerQuality : true
@@ -211,6 +215,8 @@ async function saveConfig() {
       DownloadSettings: {
         UseStreamingUrlFiles: defUseStreamingUrlFiles.value,
         DownloadFullVideoForSecondaryAudio: defDownloadFullVideoSecondaryAudio.value,
+        AudioContainerFormat: defAudioContainerFormat.value,
+        DownloadAudioOnlyForPrimaryLanguage: defDownloadAudioOnlyForPrimaryLanguage.value,
         AlwaysCreateSubfolder: defAlwaysCreateSubfolder.value,
         EnhancedDuplicateDetection: defEnhancedDuplicateDetection.value,
         AllowFallbackToLowerQuality: defAllowFallbackToLowerQuality.value,
@@ -497,6 +503,20 @@ onMounted(() => {
               <label><input v-model="defDownloadFullVideoSecondaryAudio" type="checkbox"> Vollständiges Video für sekundäre Audiosprachen</label>
               <p class="field-desc">Wenn aktiviert, wird das vollständige Video heruntergeladen, auch wenn es eine andere Audiosprache als Deutsch enthält. Andernfalls wird nur die Audiospur dieser Sprache extrahiert.</p>
             </div>
+            <div class="checkbox-field">
+              <label><input v-model="defDownloadAudioOnlyForPrimaryLanguage" type="checkbox"> Nur Audio für deutsche Sprache</label>
+            </div>
+            <div class="checkbox-field">
+              <label><input v-model="defDownloadAudioOnlyForPrimaryLanguage" type="checkbox"> Nur Audio für deutsche Sprache</label>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Standard-Container-Format für reine Audio-Downloads</label>
+            <select v-model="defAudioContainerFormat" class="field-input">
+              <option value="Mka">.mka (Matroska, empfohlen für Jellyfin)</option>
+              <option value="M4a">.m4a (für externe Podcast-/Audio-Apps)</option>
+            </select>
+            <p class="field-desc">Standardwert für neue Abonnements. .mka wird von Jellyfin selbst zuverlässig unterstützt und ist daher die Standardeinstellung; .m4a eignet sich besser, wenn die Datei primär in externen Podcast-/Audio-Apps genutzt werden soll. Gilt nur für reine Audio-Downloads (z.B. sekundäre Audiosprachen ohne vollständiges Video); die Audiospur wird in beiden Fällen ohne erneutes Kodieren übernommen.</p>
           </div>
           <div class="checkbox-field">
             <label><input v-model="defAlwaysCreateSubfolder" type="checkbox"> Unterordner für Abo erstellen</label>

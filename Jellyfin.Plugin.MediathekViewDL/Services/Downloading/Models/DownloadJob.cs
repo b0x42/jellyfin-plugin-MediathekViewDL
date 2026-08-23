@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Jellyfin.Plugin.MediathekViewDL.Configuration.SubscriptionSettings;
 using Jellyfin.Plugin.MediathekViewDL.Services.Media;
 using Jellyfin.Plugin.MediathekViewDL.Services.Metadata;
 
@@ -38,8 +39,22 @@ public class DownloadJob
     public NfoDTO? NfoMetadata { get; set; }
 
     /// <summary>
+    /// Gets or sets the episode artwork to be downloaded for this item, if applicable.
+    /// Only set for audio-only extractions, since those files carry no artwork of their own.
+    /// </summary>
+    public EpisodeArtworkDTO? ArtworkMetadata { get; set; }
+
+    /// <summary>
     /// Gets or sets the media metadata that should be embedded into the resulting
     /// media files (matroska container via ffmpeg / .strm comment).
     /// </summary>
     public MediaMetadata? MediaMetadata { get; set; }
+
+    /// <summary>
+    /// Gets or sets the output container format to use if this job includes an
+    /// <see cref="DownloadType.AudioExtraction"/> item. Defaults to <see cref="AudioContainerFormat.Mka"/>,
+    /// matching the default on <see cref="Configuration.SubscriptionSettings.BaseDownloadSettings"/>.
+    /// Not consulted for jobs that do not perform audio extraction.
+    /// </summary>
+    public AudioContainerFormat AudioContainerFormat { get; set; } = AudioContainerFormat.Mka;
 }

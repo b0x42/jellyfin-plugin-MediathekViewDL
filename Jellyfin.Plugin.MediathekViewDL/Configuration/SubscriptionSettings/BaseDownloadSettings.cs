@@ -17,6 +17,13 @@ public record BaseDownloadSettings
     public bool DownloadFullVideoForSecondaryAudio { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether to download only the audio track for German (primary-language)
+    /// content instead of the full video. Has no effect on audiodescription content, which is already
+    /// audio-only, or sign-language content, which always downloads as full video.
+    /// </summary>
+    public bool DownloadAudioOnlyForPrimaryLanguage { get; init; }
+
+    /// <summary>
     /// Gets a value indicating whether to allow falling back to lower quality versions
     /// if HD version is not available.
     /// </summary>
@@ -40,4 +47,15 @@ public record BaseDownloadSettings
     /// If enabled, the target directory is scanned for existing files matching the season/episode pattern.
     /// </summary>
     public bool EnhancedDuplicateDetection { get; init; }
+
+    /// <summary>
+    /// Gets the output container format used for audio-only downloads (secondary-language audio
+    /// extraction without video). Defaults to <see cref="AudioContainerFormat.Mka"/> since Jellyfin
+    /// itself does not properly support .m4a; use <see cref="AudioContainerFormat.M4a"/> only if
+    /// compatibility with external podcast/audio player applications is required instead.
+    /// The source audio is always copied without re-encoding regardless of the selected container.
+    /// Changing this setting does not affect files that were already downloaded; it only applies to
+    /// downloads performed after the change.
+    /// </summary>
+    public AudioContainerFormat AudioContainerFormat { get; init; } = AudioContainerFormat.Mka;
 }

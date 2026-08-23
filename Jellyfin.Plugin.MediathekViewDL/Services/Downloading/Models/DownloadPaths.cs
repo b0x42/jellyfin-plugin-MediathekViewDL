@@ -28,6 +28,14 @@ public record DownloadPaths
     public string NfoFilePath { get; set; } = null!;
 
     /// <summary>
+    /// Gets or sets the full path for the episode artwork file (same basename as
+    /// <see cref="MainFilePath"/>, <c>.jpg</c> extension). Only meaningful when
+    /// <see cref="MainType"/> is <see cref="FileType.Audio"/>, since audio files carry no
+    /// artwork of their own.
+    /// </summary>
+    public string ArtworkFilePath { get; set; } = null!;
+
+    /// <summary>
     /// Gets or sets the File Type of the Main File Path.
     /// </summary>
     public FileType MainType { get; set; } = FileType.Video;
