@@ -44,7 +44,7 @@ watch(() => props.subscription, (newVal) => {
         copy.Search.Criteria = copy.Search.Criteria || []
         copy.Download = copy.Download || {}
         if (!copy.Download.AudioContainerFormat) {
-            copy.Download.AudioContainerFormat = 'M4a'
+            copy.Download.AudioContainerFormat = 'Mka'
         }
         copy.Series = copy.Series || {}
         copy.Metadata = copy.Metadata || {}
@@ -264,10 +264,10 @@ function updateDate(target, field, value) {
                             <div class="field">
                                 <label>Container-Format für reine Audio-Downloads</label>
                                 <select v-model="editedSub.Download.AudioContainerFormat" class="field-input">
-                                    <option value="M4a">.m4a (empfohlen für Podcast-/Audio-Apps)</option>
-                                    <option value="Mka">.mka (Matroska, primär für Jellyfin selbst)</option>
+                                    <option value="Mka">.mka (Matroska, empfohlen für Jellyfin)</option>
+                                    <option value="M4a">.m4a (für externe Podcast-/Audio-Apps)</option>
                                 </select>
-                                <p class="field-desc">Gilt nur, wenn für diesen Titel eine reine Audiospur extrahiert wird (z.B. sekundäre Audiosprache ohne vollständiges Video, deutsche Sprache mit aktivierter Option "Nur Audio", oder Audiodeskription). .m4a wird von externen Podcast- und Audio-Apps deutlich besser unterstützt als .mka, welches primär innerhalb von Jellyfin funktioniert. Die Audiospur wird in beiden Fällen ohne erneutes Kodieren übernommen (kein Qualitätsverlust). Bereits heruntergeladene Dateien werden bei einer Änderung nicht konvertiert.</p>
+                                <p class="field-desc">Gilt nur, wenn für diesen Titel eine reine Audiospur extrahiert wird (z.B. sekundäre Audiosprache ohne vollständiges Video, deutsche Sprache mit aktivierter Option "Nur Audio", oder Audiodeskription). .mka wird von Jellyfin selbst zuverlässig unterstützt und ist daher die Standardeinstellung; .m4a eignet sich besser, wenn die Datei primär in externen Podcast-/Audio-Apps genutzt werden soll. Die Audiospur wird in beiden Fällen ohne erneutes Kodieren übernommen (kein Qualitätsverlust). Bereits heruntergeladene Dateien werden bei einer Änderung nicht konvertiert.</p>
                             </div>
                         </div>
                     </template>

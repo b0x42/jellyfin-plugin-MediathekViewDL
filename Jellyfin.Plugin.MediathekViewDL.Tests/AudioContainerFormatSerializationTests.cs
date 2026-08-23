@@ -8,14 +8,14 @@ namespace Jellyfin.Plugin.MediathekViewDL.Tests;
 
 /// <summary>
 /// Verifies that the new <see cref="SubscriptionSettings.AudioContainerFormat"/> setting defaults
-/// correctly to <see cref="AudioContainerFormat.M4a"/> when deserializing a subscription that predates
+/// correctly to <see cref="AudioContainerFormat.Mka"/> when deserializing a subscription that predates
 /// this field (i.e. an XML fragment with no &lt;AudioContainerFormat&gt; element), matching how
 /// Jellyfin server persists plugin configuration via its XML serializer.
 /// </summary>
 public class AudioContainerFormatSerializationTests
 {
     [Fact]
-    public void DownloadSettings_ShouldDefaultToM4a_WhenXmlHasNoAudioContainerFormatElement()
+    public void DownloadSettings_ShouldDefaultToMka_WhenXmlHasNoAudioContainerFormatElement()
     {
         // Arrange: an XML fragment representing a DownloadSettings saved before this field existed.
         const string legacyXml = """
@@ -38,7 +38,7 @@ public class AudioContainerFormatSerializationTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(AudioContainerFormat.M4a, result.AudioContainerFormat);
+        Assert.Equal(AudioContainerFormat.Mka, result.AudioContainerFormat);
     }
 
     [Fact]
@@ -62,12 +62,32 @@ public class AudioContainerFormatSerializationTests
     }
 
     [Fact]
-    public void BaseDownloadSettings_DefaultConstructor_ShouldHaveM4aAsDefault()
+    public void DownloadSettings_ShouldRoundTrip_WhenAudioContainerFormatIsExplicitlyM4a()
+    {
+        // Arrange
+        var original = new DownloadSettings { AudioContainerFormat = AudioContainerFormat.M4a };
+        var serializer = new XmlSerializer(typeof(DownloadSettings));
+
+        using var stringWriter = new StringWriter();
+        serializer.Serialize(stringWriter, original);
+        var xml = stringWriter.ToString();
+
+        // Act
+        using var reader = new StringReader(xml);
+        var result = (DownloadSettings?)serializer.Deserialize(reader);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(AudioContainerFormat.M4a, result.AudioContainerFormat);
+    }
+
+    [Fact]
+    public void BaseDownloadSettings_DefaultConstructor_ShouldHaveMkaAsDefault()
     {
         // Act
         var settings = new BaseDownloadSettings();
 
         // Assert
-        Assert.Equal(AudioContainerFormat.M4a, settings.AudioContainerFormat);
+        Assert.Equal(AudioContainerFormat.Mka, settings.AudioContainerFormat);
     }
 }

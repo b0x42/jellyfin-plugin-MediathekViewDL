@@ -213,11 +213,11 @@ namespace Jellyfin.Plugin.MediathekViewDL.Tests
             var paths = service.GenerateDownloadPaths(videoInfo, subscription, DownloadContext.Subscription);
 
             // Assert
-            // Expect: EnglishMovie.eng.m4a (audio only by default for non-German unless configured otherwise)
+            // Expect: EnglishMovie.eng.mka (audio only by default for non-German unless configured otherwise)
             // Logic says: if (videoInfo.Language == "deu" || subscription.DownloadFullVideoForSecondaryAudio) -> .mkv
-            // else -> .m4a (default AudioContainerFormat) or .mka if explicitly configured
+            // else -> .mka (default AudioContainerFormat) or .m4a if explicitly configured
 
-            Assert.Contains(".eng.m4a", paths.MainFilePath);
+            Assert.Contains(".eng.mka", paths.MainFilePath);
         }
 
         [Fact]
@@ -275,7 +275,7 @@ namespace Jellyfin.Plugin.MediathekViewDL.Tests
         }
 
         [Fact]
-        public void GenerateDownloadPaths_ShouldReturnM4a_WhenGerman_AndAudioOnlyForPrimaryLanguageEnabled()
+        public void GenerateDownloadPaths_ShouldReturnMka_WhenGerman_AndAudioOnlyForPrimaryLanguageEnabled()
         {
             // Arrange
             var config = new PluginConfiguration();
@@ -295,12 +295,12 @@ namespace Jellyfin.Plugin.MediathekViewDL.Tests
 
             // Assert
             // Non-Video output types always carry the language suffix (BuildFileName:158), even for German.
-            // .m4a is the default AudioContainerFormat.
-            Assert.EndsWith("GermanShow.deu.m4a", paths.MainFilePath);
+            // .mka is the default AudioContainerFormat.
+            Assert.EndsWith("GermanShow.deu.mka", paths.MainFilePath);
         }
 
         [Fact]
-        public void GenerateDownloadPaths_ShouldReturnMka_WhenGerman_AndAudioOnlyForPrimaryLanguageEnabled_WithMkaContainerFormat()
+        public void GenerateDownloadPaths_ShouldReturnM4a_WhenGerman_AndAudioOnlyForPrimaryLanguageEnabled_WithM4aContainerFormat()
         {
             // Arrange
             var config = new PluginConfiguration();
@@ -312,14 +312,14 @@ namespace Jellyfin.Plugin.MediathekViewDL.Tests
             var subscription = new Subscription
             {
                 Name = "TestSub",
-                Download = new DownloadSettings { DownloadAudioOnlyForPrimaryLanguage = true, AudioContainerFormat = AudioContainerFormat.Mka }
+                Download = new DownloadSettings { DownloadAudioOnlyForPrimaryLanguage = true, AudioContainerFormat = AudioContainerFormat.M4a }
             };
 
             // Act
             var paths = service.GenerateDownloadPaths(videoInfo, subscription, DownloadContext.Subscription);
 
             // Assert
-            Assert.EndsWith("GermanShow.deu.mka", paths.MainFilePath);
+            Assert.EndsWith("GermanShow.deu.m4a", paths.MainFilePath);
         }
 
         [Fact]
@@ -342,7 +342,7 @@ namespace Jellyfin.Plugin.MediathekViewDL.Tests
         }
 
         [Fact]
-        public void GenerateDownloadPaths_ShouldReturnM4a_WhenGerman_WithAudiodescription_RegardlessOfFlag()
+        public void GenerateDownloadPaths_ShouldReturnMka_WhenGerman_WithAudiodescription_RegardlessOfFlag()
         {
             // Arrange
             var config = new PluginConfiguration();
@@ -362,8 +362,8 @@ namespace Jellyfin.Plugin.MediathekViewDL.Tests
 
             // Assert
             // Audiodescription content already downloads as audio-only today, unrelated to the new flag.
-            // .m4a is the default AudioContainerFormat.
-            Assert.EndsWith(".m4a", paths.MainFilePath);
+            // .mka is the default AudioContainerFormat.
+            Assert.EndsWith(".mka", paths.MainFilePath);
         }
 
         [Fact]

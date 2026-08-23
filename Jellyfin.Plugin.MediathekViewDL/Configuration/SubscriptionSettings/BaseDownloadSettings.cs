@@ -50,10 +50,12 @@ public record BaseDownloadSettings
 
     /// <summary>
     /// Gets the output container format used for audio-only downloads (secondary-language audio
-    /// extraction without video). Defaults to <see cref="AudioContainerFormat.M4a"/> for compatibility
-    /// with external podcast/audio player applications. The source audio is always copied without
-    /// re-encoding regardless of the selected container. Changing this setting does not affect
-    /// files that were already downloaded; it only applies to downloads performed after the change.
+    /// extraction without video). Defaults to <see cref="AudioContainerFormat.Mka"/> since Jellyfin
+    /// itself does not properly support .m4a; use <see cref="AudioContainerFormat.M4a"/> only if
+    /// compatibility with external podcast/audio player applications is required instead.
+    /// The source audio is always copied without re-encoding regardless of the selected container.
+    /// Changing this setting does not affect files that were already downloaded; it only applies to
+    /// downloads performed after the change.
     /// </summary>
-    public AudioContainerFormat AudioContainerFormat { get; init; } = AudioContainerFormat.M4a;
+    public AudioContainerFormat AudioContainerFormat { get; init; } = AudioContainerFormat.Mka;
 }
